@@ -1,4 +1,4 @@
-# Desafio Técnico Frontend Pleno - JTech
+# Desafio Técnico Fullstack2 - JTech
 
 ## Sistema TODO List Multi-usuário com Arquitetura Avançada
 
