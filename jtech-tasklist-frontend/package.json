@@ -17,6 +17,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@mdi/font": "^7.4.47",
     "@types/uuid": "^10.0.0",
     "pinia": "^3.0.3",
     "uuid": "^13.0.0",

@@ -15,8 +15,8 @@ export const useAuthStore = defineStore('auth', {
     isAuthenticated: (state) => !!state.user,
   },
   actions: {
-    login(username, password) {
-      // Simulação de autenticação: apenas verifica se o username e password são iguais
+    login(username: string, password: string) {
+      // Simulação de autenticação: verifica se o username e password estão preenchidos e são iguais
       if (username && password && username === password) {
         this.user = { username: username }
         return true

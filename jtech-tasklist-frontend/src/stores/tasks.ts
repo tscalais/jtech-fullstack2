@@ -1,9 +1,14 @@
 import { defineStore } from 'pinia';
 import { useLocalStorage } from '@/composables/useLocalStorage';
 import type { Task } from '@/types';
-import { v4 as uuidv4 } from 'uuid';
+//import { v4 as uuidv4 } from 'uuid';
 
-// O estado será um objeto onde as chaves são os listIds e os valores são arrays de tarefas.
+const getNextId = (items: Task[]): number => {
+  const ids = items.map((item) => item.id)
+  const maxId = ids.length > 0 ? Math.max(...ids) : 0
+  return maxId + 1
+}
+
 type TasksByListId = { [listId: string]: Task[] };
 const tasks: import('vue').Ref<TasksByListId> = useLocalStorage('jtech-tasks', {});
 
@@ -12,39 +17,37 @@ export const useTasksStore = defineStore('tasks', {
     tasks: tasks.value
   }),
   actions: {
-    addTask(listId: string, title: string) {
+    addTask(listId: number, title: string) {
       if (!this.tasks[listId]) {
         this.tasks[listId] = [];
       }
       const newTask: Task = {
-        id: uuidv4(),
+        id: getNextId(this.tasks[listId]),
         listId,
         title,
         completed: false,
-        createdAt: Date.now()
-      };
+        createdAt: Date.now(),
+      }
       this.tasks[listId].push(newTask);
     },
-    deleteTask(listId: string, taskId: string) {
+    deleteTask(listId: number, taskId: number) {
       if (this.tasks[listId]) {
         this.tasks[listId] = this.tasks[listId].filter(task => task.id !== taskId);
       }
     },
-    toggleTask(listId: string, taskId: string) {
+    toggleTask(listId: number, taskId: number) {
       const task = this.tasks[listId]?.find(task => task.id === taskId);
       if (task) {
         task.completed = !task.completed;
       }
     },
-    // Adicione outras ações, como `editTask`
-    editTask(listId: string, taskId: string, newTitle: string) {
+    editTask(listId: number, taskId: number, newTitle: string) {
         const task = this.tasks[listId]?.find(task => task.id === taskId);
         if (task) {
             task.title = newTitle;
         }
     },
-    // Ação para deletar todas as tarefas de uma lista quando a lista é excluída.
-    deleteTasksByListId(listId: string) {
+    deleteTasksByListId(listId: number) {
         delete this.tasks[listId];
     }
   }
