@@ -1,7 +1,7 @@
+import { useAutenticacaoStore } from '@/stores/auth'
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import PainelTarefasView from '../views/PainelTarefasView.vue'
-import { useAutenticacaoStore } from '@/stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -9,19 +9,19 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: LoginView
+      component: LoginView,
     },
     {
       path: '/tarefas',
       name: 'painel-tarefas',
       component: PainelTarefasView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/',
-      redirect: '/tarefas'
-    }
-  ]
+      redirect: '/tarefas',
+    },
+  ],
 })
 
 router.beforeEach((to, from, next) => {

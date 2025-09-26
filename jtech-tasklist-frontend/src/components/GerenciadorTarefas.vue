@@ -4,12 +4,12 @@
     <v-form @submit.prevent="adicionarTarefaLocal">
       <v-text-field
         v-model="tituloNovaTarefa"
-        label="Nova Tarefa"
-        append-inner-icon="mdi-plus"
-        @click:append-inner="adicionarTarefaLocal"
-        @input="erroTarefa = ''"
         :error="!!erroTarefa"
         :error-messages="erroTarefa"
+        append-inner-icon="mdi-plus"
+        label="Nova Tarefa"
+        @input="erroTarefa = ''"
+        @click:append-inner="adicionarTarefaLocal"
       ></v-text-field>
     </v-form>
     <div class="task-scroll-container">
@@ -37,9 +37,9 @@
   </v-card>
 </template>
 
-<script setup lang="ts">
-import { ref, defineProps, defineEmits } from 'vue'
+<script lang="ts" setup>
 import type { Tarefa } from '@/types'
+import { defineEmits, defineProps, ref } from 'vue'
 
 defineProps<{
   tarefas: Tarefa[]
@@ -51,20 +51,19 @@ const erroTarefa = ref('')
 
 function adicionarTarefaLocal() {
   if (tituloNovaTarefa.value.trim()) {
-    erroTarefa.value = '' // Limpar erro anterior
+    erroTarefa.value = ''
     emits('adicionar:tarefa', tituloNovaTarefa.value)
     tituloNovaTarefa.value = ''
   }
 }
 
-// Função para mostrar erro
 const mostrarErroTarefa = (mensagem: string) => {
   erroTarefa.value = mensagem
 }
 
 // Expor função para componente pai
 defineExpose({
-  mostrarErroTarefa
+  mostrarErroTarefa,
 })
 </script>
 

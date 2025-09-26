@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia'
 import { useLocalStorage } from '@/composables/useLocalStorage'
+import { defineStore } from 'pinia'
 
 interface Usuario {
   nomeUsuario: string

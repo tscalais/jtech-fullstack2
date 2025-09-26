@@ -2,20 +2,14 @@
   <v-app>
     <!-- Barra de navegação superior -->
     <v-app-bar v-if="autenticacaoStore.autenticado" color="primary" dark>
-      <v-app-bar-title>
-        Lista de Tarefas
-      </v-app-bar-title>
+      <v-app-bar-title> Lista de Tarefas </v-app-bar-title>
 
       <v-spacer></v-spacer>
 
       <!-- Menu do usuário -->
       <v-menu>
         <template v-slot:activator="{ props }">
-          <v-btn
-            v-bind="props"
-            icon="mdi-account-circle"
-            size="large"
-          ></v-btn>
+          <v-btn icon="mdi-account-circle" size="large" v-bind="props"></v-btn>
         </template>
 
         <v-list>
@@ -25,7 +19,7 @@
             </v-list-item-title>
           </v-list-item>
           <v-divider></v-divider>
-          <v-list-item @click="fazerLogout" prepend-icon="mdi-logout">
+          <v-list-item prepend-icon="mdi-logout" @click="fazerLogout">
             <v-list-item-title>Sair</v-list-item-title>
           </v-list-item>
         </v-list>
@@ -36,32 +30,32 @@
       <RouterView />
     </v-main>
   </v-app>
-</template><script setup lang="ts">
-import { RouterView, useRouter } from 'vue-router';
-import { useAutenticacaoStore } from '@/stores/auth';
+</template>
+<script lang="ts" setup>
+import { useAutenticacaoStore } from '@/stores/auth'
+import { RouterView, useRouter } from 'vue-router'
 
 import {
   VApp,
-  VMain,
   VAppBar,
   VAppBarTitle,
-  VSpacer,
-  VMenu,
   VBtn,
+  VDivider,
   VList,
   VListItem,
   VListItemTitle,
-  VDivider
-} from 'vuetify/components';
+  VMain,
+  VMenu,
+  VSpacer,
+} from 'vuetify/components'
 
-const autenticacaoStore = useAutenticacaoStore();
-const router = useRouter();
+const autenticacaoStore = useAutenticacaoStore()
+const router = useRouter()
 
 const fazerLogout = () => {
-  autenticacaoStore.sair();
-  router.push('/login');
-};
+  autenticacaoStore.sair()
+  router.push('/login')
+}
 </script>
 
-<style>
-</style>
+<style></style>

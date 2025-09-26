@@ -1,14 +1,13 @@
-import { defineStore } from 'pinia';
-import { useLocalStorage } from '@/composables/useLocalStorage';
-import type { Lista } from '@/types';
-//import { v4 as uuidv4 } from 'uuid';
+import { useLocalStorage } from '@/composables/useLocalStorage'
+import type { Lista } from '@/types'
+import { defineStore } from 'pinia'
 
 const getNextId = (items: Lista[]): number => {
-  const ids = items.map((item) => item.id);
+  const ids = items.map((item) => item.id)
   const maxId = ids.length > 0 ? Math.max(...ids) : 0
   return maxId + 1
 }
-const listas: import('vue').Ref<Lista[]> = useLocalStorage('jtech-lists', []);
+const listas: import('vue').Ref<Lista[]> = useLocalStorage('jtech-lists', [])
 
 export const useListasStore = defineStore('listas', {
   state: () => ({
@@ -17,11 +16,10 @@ export const useListasStore = defineStore('listas', {
   }),
   actions: {
     criarLista(nome: string) {
-      // Verificar se já existe uma lista com o mesmo nome
-      const nomeJaExiste = this.listas.some(lista => 
-        lista.nome.toLowerCase().trim() === nome.toLowerCase().trim()
+      const nomeJaExiste = this.listas.some(
+        (lista) => lista.nome.toLowerCase().trim() === nome.toLowerCase().trim(),
       )
-      
+
       if (nomeJaExiste) {
         throw new Error(`Já existe uma lista com o nome "${nome}"`)
       }
@@ -45,11 +43,10 @@ export const useListasStore = defineStore('listas', {
       }
     },
     renomearLista(id: number, nome: string) {
-      // Verificar se já existe outra lista com o mesmo nome
-      const nomeJaExiste = this.listas.some(lista => 
-        lista.id !== id && lista.nome.toLowerCase().trim() === nome.toLowerCase().trim()
+      const nomeJaExiste = this.listas.some(
+        (lista) => lista.id !== id && lista.nome.toLowerCase().trim() === nome.toLowerCase().trim(),
       )
-      
+
       if (nomeJaExiste) {
         throw new Error(`Já existe uma lista com o nome "${nome}"`)
       }

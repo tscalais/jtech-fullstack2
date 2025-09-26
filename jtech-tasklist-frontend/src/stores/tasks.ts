@@ -1,7 +1,6 @@
-import { defineStore } from 'pinia';
-import { useLocalStorage } from '@/composables/useLocalStorage';
-import type { Tarefa } from '@/types';
-//import { v4 as uuidv4 } from 'uuid';
+import { useLocalStorage } from '@/composables/useLocalStorage'
+import type { Tarefa } from '@/types'
+import { defineStore } from 'pinia'
 
 const getNextId = (items: Tarefa[]): number => {
   const ids = items.map((item) => item.id)
@@ -9,24 +8,23 @@ const getNextId = (items: Tarefa[]): number => {
   return maxId + 1
 }
 
-type TarefasPorListaId = { [listaId: string]: Tarefa[] };
-const tarefas: import('vue').Ref<TarefasPorListaId> = useLocalStorage('jtech-tasks', {});
+type TarefasPorListaId = { [listaId: number]: Tarefa[] }
+const tarefas: import('vue').Ref<TarefasPorListaId> = useLocalStorage('jtech-tasks', {})
 
 export const useTarefasStore = defineStore('tarefas', {
   state: () => ({
-    tarefas: tarefas.value
+    tarefas: tarefas.value,
   }),
   actions: {
     adicionarTarefa(listaId: number, titulo: string) {
       if (!this.tarefas[listaId]) {
-        this.tarefas[listaId] = [];
+        this.tarefas[listaId] = []
       }
 
-      // Verificar se já existe uma tarefa com o mesmo título na lista
-      const tituloJaExiste = this.tarefas[listaId].some(tarefa => 
-        tarefa.titulo.toLowerCase().trim() === titulo.toLowerCase().trim()
+      const tituloJaExiste = this.tarefas[listaId].some(
+        (tarefa) => tarefa.titulo.toLowerCase().trim() === titulo.toLowerCase().trim(),
       )
-      
+
       if (tituloJaExiste) {
         throw new Error(`Já existe uma tarefa com o título "${titulo}" nesta lista`)
       }
@@ -38,36 +36,38 @@ export const useTarefasStore = defineStore('tarefas', {
         concluida: false,
         criadaEm: Date.now(),
       }
-      this.tarefas[listaId].push(novaTarefa);
+      this.tarefas[listaId].push(novaTarefa)
     },
     excluirTarefa(listaId: number, tarefaId: number) {
       if (this.tarefas[listaId]) {
-        this.tarefas[listaId] = this.tarefas[listaId].filter(tarefa => tarefa.id !== tarefaId);
+        this.tarefas[listaId] = this.tarefas[listaId].filter((tarefa) => tarefa.id !== tarefaId)
       }
     },
     alternarTarefa(listaId: number, tarefaId: number) {
-      const tarefa = this.tarefas[listaId]?.find(tarefa => tarefa.id === tarefaId);
+      const tarefa = this.tarefas[listaId]?.find((tarefa) => tarefa.id === tarefaId)
       if (tarefa) {
-        tarefa.concluida = !tarefa.concluida;
+        tarefa.concluida = !tarefa.concluida
       }
+      return tarefa
     },
     editarTarefa(listaId: number, tarefaId: number, novoTitulo: string) {
-      // Verificar se já existe outra tarefa com o mesmo título na lista
-      const tituloJaExiste = this.tarefas[listaId]?.some(tarefa => 
-        tarefa.id !== tarefaId && tarefa.titulo.toLowerCase().trim() === novoTitulo.toLowerCase().trim()
+      const tituloJaExiste = this.tarefas[listaId]?.some(
+        (tarefa) =>
+          tarefa.id !== tarefaId &&
+          tarefa.titulo.toLowerCase().trim() === novoTitulo.toLowerCase().trim(),
       )
-      
+
       if (tituloJaExiste) {
         throw new Error(`Já existe uma tarefa com o título "${novoTitulo}" nesta lista`)
       }
 
-      const tarefa = this.tarefas[listaId]?.find(tarefa => tarefa.id === tarefaId);
+      const tarefa = this.tarefas[listaId]?.find((tarefa) => tarefa.id === tarefaId)
       if (tarefa) {
-        tarefa.titulo = novoTitulo.trim();
+        tarefa.titulo = novoTitulo.trim()
       }
     },
     excluirTarefasPorListaId(listaId: number) {
-        delete this.tarefas[listaId];
-    }
-  }
-});
+      delete this.tarefas[listaId]
+    },
+  },
+})
