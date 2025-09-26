@@ -3,6 +3,7 @@
     <v-row>
       <v-col cols="12" md="4" lg="3" xl="2">
         <gerenciador-lista
+          ref="gerenciadorListaRef"
           :listas="listasStore.listas"
           :idListaAtiva="listasStore.listaAtivaId"
           @atualizar:listaAtiva="listasStore.definirListaAtiva"
@@ -15,6 +16,7 @@
 
       <v-col cols="12" md="8" lg="9" xl="10">
         <gerenciador-tarefas
+          ref="gerenciadorTarefasRef"
           v-if="listasStore.listaAtivaId"
           :tarefas="tarefasAtivas"
           @adicionar:tarefa="adicionarTarefa"
@@ -29,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 //import { useRouter } from 'vue-router';
 
 // Meus Componentes
@@ -49,6 +51,16 @@ const listasStore = useListasStore()
 const tarefasStore = useTarefasStore()
 //const router = useRouter();
 
+// Referências para os componentes filhos
+const gerenciadorListaRef = ref<InstanceType<typeof GerenciadorLista> | null>(null)
+const gerenciadorTarefasRef = ref<InstanceType<typeof GerenciadorTarefas> | null>(null)
+
+// Limpar erros quando mudar de lista
+watch(() => listasStore.listaAtivaId, () => {
+  // Limpar erro de tarefa quando trocar de lista
+  gerenciadorTarefasRef.value?.mostrarErroTarefa('')
+})
+
 onMounted(() => {
   if (listasStore.listas.length === 0 && autenticacaoStore.autenticado) {
     listasStore.criarLista('Tarefas Principais')
@@ -61,7 +73,11 @@ const tarefasAtivas = computed(() => {
 })
 
 const adicionarLista = (nomeList: string) => {
-  listasStore.criarLista(nomeList)
+  try {
+    listasStore.criarLista(nomeList)
+  } catch (error) {
+    gerenciadorListaRef.value?.mostrarErroLista((error as Error).message)
+  }
 }
 
 // Função simples usando confirm nativo do browser
@@ -83,7 +99,11 @@ const confirmarExclusaoLista = (listaId: number) => {
 
 const renomearLista = (novoNome: string) => {
   if (listasStore.listaAtivaId) {
-    listasStore.renomearLista(listasStore.listaAtivaId, novoNome)
+    try {
+      listasStore.renomearLista(listasStore.listaAtivaId, novoNome)
+    } catch (error) {
+      gerenciadorListaRef.value?.mostrarErroLista((error as Error).message)
+    }
   }
 }
 
@@ -97,7 +117,11 @@ const excluirTarefa = (tarefaId: number) => {
 
 const adicionarTarefa = (tituloTarefa: string) => {
   if (listasStore.listaAtivaId) {
-    tarefasStore.adicionarTarefa(listasStore.listaAtivaId, tituloTarefa)
+    try {
+      tarefasStore.adicionarTarefa(listasStore.listaAtivaId, tituloTarefa)
+    } catch (error) {
+      gerenciadorTarefasRef.value?.mostrarErroTarefa((error as Error).message)
+    }
   }
 }
 </script>

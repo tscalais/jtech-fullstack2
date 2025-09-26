@@ -45,6 +45,9 @@
         density="compact"
         append-inner-icon="mdi-plus"
         @click:append-inner="criarLista"
+        @input="erroLista = ''"
+        :error="!!erroLista"
+        :error-messages="erroLista"
         required
       ></v-text-field>
     </v-form>
@@ -64,6 +67,7 @@ const emits = defineEmits(['atualizar:listaAtiva', 'adicionar:lista', 'excluir:l
 const tituloListaNova = ref('')
 const tituloListaEdicao = ref('')
 const estaEditando = ref(false)
+const erroLista = ref('')
 
 const iniciarRenomeacao = (nomeLista: string) => {
   tituloListaEdicao.value = nomeLista
@@ -72,10 +76,21 @@ const iniciarRenomeacao = (nomeLista: string) => {
 
 const criarLista = () => {
   if (tituloListaNova.value.trim()) {
+    erroLista.value = '' // Limpar erro anterior
     emits('adicionar:lista', tituloListaNova.value.trim())
     tituloListaNova.value = ''
   }
 }
+
+// Função para mostrar erro
+const mostrarErroLista = (mensagem: string) => {
+  erroLista.value = mensagem
+}
+
+// Expor função para componente pai
+defineExpose({
+  mostrarErroLista
+})
 
 const salvarRenomeacao = () => {
   if (tituloListaEdicao.value.trim() !== '') {

@@ -12,10 +12,14 @@ const router = createRouter({
       component: LoginView
     },
     {
-      path: '/',
-      name: 'dashboard',
+      path: '/tarefas',
+      name: 'painel-tarefas',
       component: PainelTarefasView,
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/',
+      redirect: '/tarefas'
     }
   ]
 })

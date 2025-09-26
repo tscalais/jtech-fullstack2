@@ -19,7 +19,7 @@ const fazerLogin = () => {
   if (sucesso) {
     erroLogin.value = ''
     tentativasLogin.value = 0
-    router.push('/') // Redireciona para a dashboard
+    router.push('/tarefas') // Redireciona para o painel de tarefas
   } else {
     tentativasLogin.value++
 

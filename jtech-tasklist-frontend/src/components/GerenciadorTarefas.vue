@@ -7,6 +7,9 @@
         label="Nova Tarefa"
         append-inner-icon="mdi-plus"
         @click:append-inner="adicionarTarefaLocal"
+        @input="erroTarefa = ''"
+        :error="!!erroTarefa"
+        :error-messages="erroTarefa"
       ></v-text-field>
     </v-form>
     <div class="task-scroll-container">
@@ -44,13 +47,25 @@ defineProps<{
 
 const emits = defineEmits(['adicionar:tarefa', 'alternar:tarefa', 'excluir:tarefa'])
 const tituloNovaTarefa = ref('')
+const erroTarefa = ref('')
 
 function adicionarTarefaLocal() {
   if (tituloNovaTarefa.value.trim()) {
+    erroTarefa.value = '' // Limpar erro anterior
     emits('adicionar:tarefa', tituloNovaTarefa.value)
     tituloNovaTarefa.value = ''
   }
 }
+
+// Função para mostrar erro
+const mostrarErroTarefa = (mensagem: string) => {
+  erroTarefa.value = mensagem
+}
+
+// Expor função para componente pai
+defineExpose({
+  mostrarErroTarefa
+})
 </script>
 
 <style scoped>

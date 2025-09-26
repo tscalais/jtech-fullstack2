@@ -17,9 +17,18 @@ export const useListasStore = defineStore('listas', {
   }),
   actions: {
     criarLista(nome: string) {
+      // Verificar se já existe uma lista com o mesmo nome
+      const nomeJaExiste = this.listas.some(lista => 
+        lista.nome.toLowerCase().trim() === nome.toLowerCase().trim()
+      )
+      
+      if (nomeJaExiste) {
+        throw new Error(`Já existe uma lista com o nome "${nome}"`)
+      }
+
       const novaLista: Lista = {
         id: getNextId(this.listas),
-        nome,
+        nome: nome.trim(),
         criadaEm: Date.now(),
       }
       this.listas.push(novaLista)
@@ -36,9 +45,18 @@ export const useListasStore = defineStore('listas', {
       }
     },
     renomearLista(id: number, nome: string) {
+      // Verificar se já existe outra lista com o mesmo nome
+      const nomeJaExiste = this.listas.some(lista => 
+        lista.id !== id && lista.nome.toLowerCase().trim() === nome.toLowerCase().trim()
+      )
+      
+      if (nomeJaExiste) {
+        throw new Error(`Já existe uma lista com o nome "${nome}"`)
+      }
+
       const lista = this.listas.find((l) => l.id === id)
       if (lista) {
-        lista.nome = nome
+        lista.nome = nome.trim()
       }
     },
     definirListaAtiva(id: number) {
