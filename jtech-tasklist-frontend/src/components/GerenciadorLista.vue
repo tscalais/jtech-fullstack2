@@ -29,10 +29,10 @@
               {{ lista.nome }}
             </v-list-item-title>
             <template v-if="lista.id === idListaAtiva && !estaEditando" #append>
-              <span size="small" @click.stop="$emit('excluir:lista', lista.id)">
+              <span size="small" data-testid="excluir-lista" @click.stop="$emit('excluir:lista', lista.id)">
                 <v-icon color="red">mdi-delete-circle</v-icon>
               </span>
-              <span size="small" @click.stop="iniciarRenomeacao(lista.nome)">
+              <span size="small" data-testid="editar-lista" @click.stop="iniciarRenomeacao(lista.nome)">
                 <v-icon color="blue">mdi-pencil-circle</v-icon>
               </span>
             </template>
