@@ -4,8 +4,8 @@ import GerenciadorLista from '../GerenciadorLista.vue'
 import GerenciadorTarefas from '../GerenciadorTarefas.vue'
 
 const tarefas = [
-  { id: 1, titulo: 'Tarefa 1', concluida: false },
-  { id: 2, titulo: 'Tarefa 2', concluida: true },
+  { id: 1, listaId: 1, titulo: 'Tarefa 1', concluida: false, criadaEm: Date.now() },
+  { id: 2, listaId: 1, titulo: 'Tarefa 2', concluida: true, criadaEm: Date.now() },
 ]
 
 describe('GerenciadorTarefas', () => {
@@ -28,14 +28,14 @@ describe('GerenciadorTarefas', () => {
     const wrapper = mount(GerenciadorTarefas, {
       props: { tarefas },
     })
-    await wrapper.findAllComponents({ name: 'v-checkbox-btn' })[0].vm.$emit('update:modelValue')
+    await wrapper.findAllComponents({ name: 'ElCheckbox' })[0].vm.$emit('change')
     expect(wrapper.emitted('alternar:tarefa')).toBeTruthy()
   })
 })
 
 const listas = [
-  { id: 1, nome: 'Lista 1' },
-  { id: 2, nome: 'Lista 2' },
+  { id: 1, nome: 'Lista 1', criadaEm: Date.now() },
+  { id: 2, nome: 'Lista 2', criadaEm: Date.now() },
 ]
 
 describe('GerenciadorLista', () => {
@@ -59,7 +59,7 @@ describe('GerenciadorLista', () => {
     const wrapper = mount(GerenciadorLista, {
       props: { listas, idListaAtiva: 1 },
     })
-    await wrapper.findAllComponents({ name: 'v-list-item' })[1].trigger('click')
+    await wrapper.findAllComponents({ name: 'ElMenuItem' })[1].trigger('click')
     expect(wrapper.emitted('atualizar:listaAtiva')).toBeTruthy()
   })
 })
