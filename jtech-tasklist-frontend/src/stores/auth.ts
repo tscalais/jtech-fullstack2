@@ -1,31 +1,33 @@
 import { defineStore } from 'pinia'
 import { useLocalStorage } from '@/composables/useLocalStorage'
 
-interface User {
-  username: string
+interface Usuario {
+  nomeUsuario: string
 }
 
-const storedUser = useLocalStorage('auth-user', null as User | null)
+const usuarioArmazenado = useLocalStorage('auth-user', null as Usuario | null)
 
-export const useAuthStore = defineStore('auth', {
+export const useAutenticacaoStore = defineStore('autenticacao', {
   state: () => ({
-    user: storedUser,
+    usuario: usuarioArmazenado,
   }),
   getters: {
-    isAuthenticated: (state) => !!state.user,
+    autenticado: (state) => !!state.usuario,
   },
   actions: {
-    login(username: string, password: string) {
-      // Simulação de autenticação: verifica se o username e password estão preenchidos e são iguais
-      if (username && password && username === password) {
-        this.user = { username: username }
+    entrar(nomeUsuario: string, senha: string) {
+      // Simulação de autenticação: verifica se o nomeUsuario e senha estão preenchidos e são iguais
+      if (nomeUsuario && senha && nomeUsuario === senha) {
+        this.usuario = { nomeUsuario: nomeUsuario }
         return true
       }
-      this.user = null
+      this.usuario = null
       return false
     },
-    logout() {
-      this.user = null
+    sair() {
+      this.usuario = null
+      // Limpa o localStorage removendo o usuário salvo
+      localStorage.removeItem('auth-user')
     },
   },
 })

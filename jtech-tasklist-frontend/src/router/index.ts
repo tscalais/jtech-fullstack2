@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
-import DashboardView from '../views/DashboardView.vue'
-import { useAuthStore } from '@/stores/auth'
+import PainelTarefasView from '../views/PainelTarefasView.vue'
+import { useAutenticacaoStore } from '@/stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,15 +14,15 @@ const router = createRouter({
     {
       path: '/',
       name: 'dashboard',
-      component: DashboardView,
+      component: PainelTarefasView,
       meta: { requiresAuth: true }
     }
   ]
 })
 
 router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore()
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+  const autenticacaoStore = useAutenticacaoStore()
+  if (to.meta.requiresAuth && !autenticacaoStore.autenticado) {
     // se a rota requer autenticação e o usuário não está autenticado,
     // redireciona para a página de login
     next({ name: 'login' })

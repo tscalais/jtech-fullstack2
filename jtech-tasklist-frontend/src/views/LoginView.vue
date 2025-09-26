@@ -1,48 +1,81 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { useAutenticacaoStore } from '@/stores/auth'
 
-const authStore = useAuthStore()
+const autenticacaoStore = useAutenticacaoStore()
 const router = useRouter()
 
 const form = reactive({
-  username: '',
-  password: ''
+  nomeUsuario: '',
+  senha: '',
 })
 
-const handleLogin = () => {
-  const success = authStore.login(form.username, form.password)
-  if (success) {
+const erroLogin = ref('')
+const tentativasLogin = ref(0)
+
+const fazerLogin = () => {
+  const sucesso = autenticacaoStore.entrar(form.nomeUsuario, form.senha)
+  if (sucesso) {
+    erroLogin.value = ''
+    tentativasLogin.value = 0
     router.push('/') // Redireciona para a dashboard
   } else {
-    alert('Usuário ou senha inválidos.')
+    tentativasLogin.value++
+
+    if (tentativasLogin.value === 1) {
+      erroLogin.value = 'Usuário ou senha incorretos. 💡 Dica: Use o mesmo texto para usuário e senha.'
+    } else if (tentativasLogin.value === 2) {
+      erroLogin.value = 'Lembre-se: o usuário e a senha devem ser idênticos para fazer login!'
+    } else {
+      erroLogin.value = 'Ainda não conseguiu? 👤 Experimente: Seu Nome em usuário e senha.'
+    }
   }
 }
 </script>
 
 <template>
   <v-container fill-height fluid class="d-flex align-center justify-center">
-    <v-card class="pa-8" width="400">
+    <v-card class="pa-8" width="800">
       <v-card-title class="text-h4 text-center">Login</v-card-title>
       <v-card-text>
-        <v-form @submit.prevent="handleLogin">
-          <v-text-field label="Usuário" v-model="form.username" required
-            :rules="[v => !!v || 'Usuário é obrigatório']"></v-text-field>
-          <v-text-field label="Senha" v-model="form.password" type="password" required
-            :rules="[v => !!v || 'Senha é obrigatória']"></v-text-field>
-          <v-btn type="submit" color="primary" block class="mt-4">
-            Entrar
-          </v-btn>
+        <v-alert
+          v-if="erroLogin"
+          type="warning"
+          variant="tonal"
+          class="mb-4"
+          closable
+          @click:close="erroLogin = ''"
+        >
+          {{ erroLogin }}
+        </v-alert>
+
+        <v-form @submit.prevent="fazerLogin">
+          <v-text-field
+            label="Usuário"
+            v-model="form.nomeUsuario"
+            required
+            :rules="[(v) => !!v || 'Usuário é obrigatório']"
+            :error="!!erroLogin"
+          ></v-text-field>
+          <v-text-field
+            label="Senha"
+            v-model="form.senha"
+            type="password"
+            required
+            :rules="[(v) => !!v || 'Senha é obrigatória']"
+            :error="!!erroLogin"
+            autocomplete="new-password"
+          ></v-text-field>
+          <v-btn type="submit" color="primary" block class="mt-4"> Entrar </v-btn>
         </v-form>
       </v-card-text>
     </v-card>
   </v-container>
 </template>
 
-
-
 <style scoped>
+
 .login-container {
   display: flex;
   flex-direction: column;

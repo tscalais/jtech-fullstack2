@@ -1,54 +1,54 @@
 import { defineStore } from 'pinia';
 import { useLocalStorage } from '@/composables/useLocalStorage';
-import type { Task } from '@/types';
+import type { Tarefa } from '@/types';
 //import { v4 as uuidv4 } from 'uuid';
 
-const getNextId = (items: Task[]): number => {
+const getNextId = (items: Tarefa[]): number => {
   const ids = items.map((item) => item.id)
   const maxId = ids.length > 0 ? Math.max(...ids) : 0
   return maxId + 1
 }
 
-type TasksByListId = { [listId: string]: Task[] };
-const tasks: import('vue').Ref<TasksByListId> = useLocalStorage('jtech-tasks', {});
+type TarefasPorListaId = { [listaId: string]: Tarefa[] };
+const tarefas: import('vue').Ref<TarefasPorListaId> = useLocalStorage('jtech-tasks', {});
 
-export const useTasksStore = defineStore('tasks', {
+export const useTarefasStore = defineStore('tarefas', {
   state: () => ({
-    tasks: tasks.value
+    tarefas: tarefas.value
   }),
   actions: {
-    addTask(listId: number, title: string) {
-      if (!this.tasks[listId]) {
-        this.tasks[listId] = [];
+    adicionarTarefa(listaId: number, titulo: string) {
+      if (!this.tarefas[listaId]) {
+        this.tarefas[listaId] = [];
       }
-      const newTask: Task = {
-        id: getNextId(this.tasks[listId]),
-        listId,
-        title,
-        completed: false,
-        createdAt: Date.now(),
+      const novaTarefa: Tarefa = {
+        id: getNextId(this.tarefas[listaId]),
+        listaId,
+        titulo,
+        concluida: false,
+        criadaEm: Date.now(),
       }
-      this.tasks[listId].push(newTask);
+      this.tarefas[listaId].push(novaTarefa);
     },
-    deleteTask(listId: number, taskId: number) {
-      if (this.tasks[listId]) {
-        this.tasks[listId] = this.tasks[listId].filter(task => task.id !== taskId);
-      }
-    },
-    toggleTask(listId: number, taskId: number) {
-      const task = this.tasks[listId]?.find(task => task.id === taskId);
-      if (task) {
-        task.completed = !task.completed;
+    excluirTarefa(listaId: number, tarefaId: number) {
+      if (this.tarefas[listaId]) {
+        this.tarefas[listaId] = this.tarefas[listaId].filter(tarefa => tarefa.id !== tarefaId);
       }
     },
-    editTask(listId: number, taskId: number, newTitle: string) {
-        const task = this.tasks[listId]?.find(task => task.id === taskId);
-        if (task) {
-            task.title = newTitle;
+    alternarTarefa(listaId: number, tarefaId: number) {
+      const tarefa = this.tarefas[listaId]?.find(tarefa => tarefa.id === tarefaId);
+      if (tarefa) {
+        tarefa.concluida = !tarefa.concluida;
+      }
+    },
+    editarTarefa(listaId: number, tarefaId: number, novoTitulo: string) {
+        const tarefa = this.tarefas[listaId]?.find(tarefa => tarefa.id === tarefaId);
+        if (tarefa) {
+            tarefa.titulo = novoTitulo;
         }
     },
-    deleteTasksByListId(listId: number) {
-        delete this.tasks[listId];
+    excluirTarefasPorListaId(listaId: number) {
+        delete this.tarefas[listaId];
     }
   }
 });

@@ -1,13 +1,13 @@
-export interface Task {
+export interface Tarefa {
   id: number;
-  listId: number;
-  title: string;
-  completed: boolean;
-  createdAt: number;
+  listaId: number;
+  titulo: string;
+  concluida: boolean;
+  criadaEm: number;
 }
 
-export interface List {
+export interface Lista {
   id: number;
-  name: string;
-  createdAt: number;
+  nome: string;
+  criadaEm: number;
 }
