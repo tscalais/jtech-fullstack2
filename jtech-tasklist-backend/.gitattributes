@@ -1,3 +1,21 @@
-/gradlew text eol=lf
-*.bat text eol=crlf
+* text=auto eol=lf
+
+/mvnw text eol=lf
+*.cmd text eol=crlf
+
 *.jar binary
+*.class binary
+
+*.java text
+*.xml text
+*.properties text
+*.yml text
+*.sql text
+*.md text
+*.html text
+*.css text
+*.js text
+
+*.iml linguist-generated=true
+.idea/** linguist-generated=true
+.vscode/** linguist-generated=true
