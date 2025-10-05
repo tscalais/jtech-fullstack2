@@ -10,7 +10,7 @@
  *  license agreement you entered into with J-Tech.
  *
  */
-package br.com.jtech.tasklist.adapters.input.protocols;
+package br.com.jtech.tasklist.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
@@ -36,3 +36,5 @@ public class TasklistRequest implements Serializable {
 
     private List<TasklistRequest> requests;
 }
+
+// Arquivo removido após migração para MVC.
