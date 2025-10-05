@@ -10,13 +10,13 @@
 *  license agreement you entered into with J-Tech.
 *
 */
-package br.com.jtech.tasklist.adapters.output.repositories.entities;
+package br.com.jtech.tasklist.model.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.util.UUID;
 
@@ -34,8 +34,8 @@ import java.util.UUID;
 public class TasklistEntity {
 
     @Id
-    @GeneratedValue(generator = "uuid2")
-    @GenericGenerator(name = "uuid2", strategy = "uuid2")
+    @GeneratedValue
+    @UuidGenerator
     private UUID id;
 
     //Others parameters...

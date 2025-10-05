@@ -10,10 +10,10 @@
 *  license agreement you entered into with J-Tech.
 *
 */
-package br.com.jtech.tasklist.adapters.input.protocols;
+package br.com.jtech.tasklist.dto;
 
-import br.com.jtech.tasklist.application.core.domains.Tasklist;
-import br.com.jtech.tasklist.adapters.output.repositories.entities.TasklistEntity;
+import br.com.jtech.tasklist.model.Tasklist;
+import br.com.jtech.tasklist.model.entities.TasklistEntity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
