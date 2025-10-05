@@ -1,11 +1,13 @@
 
 package br.com.jtech.tasklist.controller;
 
-import br.com.jtech.tasklist.dto.TokenResponse;
+import br.com.jtech.tasklist.dto.AuthRequest;
+import br.com.jtech.tasklist.dto.AuthResponse;
 import br.com.jtech.tasklist.dto.UserRequest;
 import br.com.jtech.tasklist.model.User;
-import br.com.jtech.tasklist.service.RegisterUserUseCase;
-import br.com.jtech.tasklist.service.AuthenticateUserUseCase;
+import br.com.jtech.tasklist.service.UserService;
+import br.com.jtech.tasklist.service.AuthService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,25 +18,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-    private final RegisterUserUseCase registerUserUseCase;
-    private final AuthenticateUserUseCase authenticateUserUseCase;
 
-    public AuthController(RegisterUserUseCase registerUserUseCase,
-                          AuthenticateUserUseCase authenticateUserUseCase) {
-        this.registerUserUseCase = registerUserUseCase;
-        this.authenticateUserUseCase = authenticateUserUseCase;
-    }
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private AuthService authService;
 
     @PostMapping("/register")
     public ResponseEntity<User> register(@RequestBody UserRequest request) {
-        User user = registerUserUseCase.register(request.getUserName(), request.getPassword());
+        User user = userService.register(request.getUserName(), request.getPassword());
         return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(@RequestBody UserRequest request) {
-        String token = authenticateUserUseCase.authenticate(request.getUserName(), request.getPassword());
-        return ResponseEntity.ok(new TokenResponse(token));
+    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
+        return ResponseEntity.ok(authService.authenticate(request.getUserName(), request.getPassword()));
     }
 }
 

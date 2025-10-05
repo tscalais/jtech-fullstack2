@@ -1,19 +1,20 @@
 package br.com.jtech.tasklist.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class UserRequest implements Serializable {
+@JsonIgnoreProperties(ignoreUnknown = true)
+
+public class UserResponse {
     private String userName;
     private String password;
 }

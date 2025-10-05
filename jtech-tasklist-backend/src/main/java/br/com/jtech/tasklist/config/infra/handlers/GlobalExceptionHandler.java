@@ -15,6 +15,7 @@ package br.com.jtech.tasklist.config.infra.handlers;
 
 import br.com.jtech.tasklist.config.infra.exceptions.*;
 import br.com.jtech.tasklist.config.infra.exceptions.UserAlreadyExistsException;
+import br.com.jtech.tasklist.config.infra.exceptions.InvalidCredentialsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -60,6 +61,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ApiError> handleUserAlreadyExists(UserAlreadyExistsException ex) {
         ApiError error = new ApiError(HttpStatus.CONFLICT);
+        error.setMessage(ex.getMessage());
+        error.setTimestamp(LocalDateTime.now());
+        error.setDebugMessage(ex.getLocalizedMessage());
+        return buildResponseEntity(error);
+    }
+
+    /**
+     * This method handles invalid credentials exception (login failure).
+     *
+     * @param ex Exception thrown.
+     * @return Return a {@link ApiError} with the error message and HTTP 401.
+     */
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiError> handleInvalidCredentials(InvalidCredentialsException ex) {
+        ApiError error = new ApiError(HttpStatus.UNAUTHORIZED);
         error.setMessage(ex.getMessage());
         error.setTimestamp(LocalDateTime.now());
         error.setDebugMessage(ex.getLocalizedMessage());

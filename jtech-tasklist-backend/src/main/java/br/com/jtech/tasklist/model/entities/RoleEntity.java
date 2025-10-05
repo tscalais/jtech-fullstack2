@@ -17,8 +17,8 @@ public class RoleEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "role_name", nullable = false, unique = true)
-    private String roleName;
+    @Column(name = "name", nullable = false, unique = true)
+    private String name;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -28,8 +28,8 @@ public class RoleEntity {
     )
     private java.util.Set<PermissionEntity> permissions;
 
-    public RoleEntity(String roleName) {
-        this.roleName = roleName;
+    public RoleEntity(String name) {
+        this.name = name;
     }
 
     @Override
