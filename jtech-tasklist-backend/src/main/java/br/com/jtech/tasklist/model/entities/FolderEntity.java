@@ -1,8 +1,8 @@
-package br.com.jtech.tasklist.model;
+package br.com.jtech.tasklist.model.entities;
 
-import br.com.jtech.tasklist.model.entities.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Folder {
+public class FolderEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

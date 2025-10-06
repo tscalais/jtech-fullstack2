@@ -14,14 +14,14 @@ import java.util.UUID;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class UserDTO {
 
     private String id;
     private String userName;
     private String password;
 
-    public static List<User> of(List<UserEntity> entities) {
-        return entities.stream().map(User::of).toList();
+    public static List<UserDTO> of(List<UserEntity> entities) {
+        return entities.stream().map(UserDTO::of).toList();
     }
 
     public UserEntity toEntity() {
@@ -32,16 +32,16 @@ public class User {
                 .build();
     }
 
-    public static User of(UserEntity entity) {
-        return User.builder()
+    public static UserDTO of(UserEntity entity) {
+        return UserDTO.builder()
                 .id(entity.getId().toString())
                 .userName(entity.getUserName())
                 .password(entity.getPassword())
                 .build();
     }
 
-    public static User of(UserRequest request) {
-        return User.builder()
+    public static UserDTO of(UserRequest request) {
+        return UserDTO.builder()
                 //.id(request.getId())
                 .userName(request.getUserName())
                 .password(request.getPassword())

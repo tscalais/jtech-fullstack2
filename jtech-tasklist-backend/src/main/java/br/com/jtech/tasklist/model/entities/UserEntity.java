@@ -5,7 +5,6 @@ import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -26,14 +25,6 @@ public class UserEntity {
 
     @Column(nullable = false)
     private String password;
-
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "user_roles",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private Set<RoleEntity> roles;
 
     @Override
     public boolean equals(Object o) {
