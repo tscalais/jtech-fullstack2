@@ -1,61 +1,207 @@
 <template>
-  <v-app>
-    <!-- Barra de navegação superior -->
-    <v-app-bar v-if="autenticacaoStore.autenticado" color="primary" dark>
-      <v-app-bar-title> Lista de Tarefas </v-app-bar-title>
-
-      <v-spacer></v-spacer>
-
-      <!-- Menu do usuário -->
-      <v-menu>
-        <template v-slot:activator="{ props }">
-          <v-btn icon="mdi-account-circle" size="large" v-bind="props"></v-btn>
-        </template>
-
-        <v-list>
-          <v-list-item>
-            <v-list-item-title class="text-subtitle-2">
-              Olá, {{ autenticacaoStore.usuario?.nomeUsuario }}!
-            </v-list-item-title>
-          </v-list-item>
-          <v-divider></v-divider>
-          <v-list-item prepend-icon="mdi-logout" @click="fazerLogout">
-            <v-list-item-title>Sair</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
-    </v-app-bar>
-
-    <v-main>
-      <RouterView />
-    </v-main>
-  </v-app>
+  <div class="min-h-full">
+    <Disclosure
+      as="nav"
+      class="bg-gray-800 dark:bg-gray-800/50"
+      v-slot="{ open }"
+      v-if="autenticacaoStore.autenticado"
+    >
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex h-16 items-center justify-between">
+          <div class="flex items-center">
+            <div class="shrink-0">
+              <img class="size-8" src="../public/icon.svg" alt="Logo" />
+            </div>
+            <div class="hidden md:block">
+              <div class="ml-10 flex items-baseline space-x-4">
+                <a
+                  v-for="item in navigation"
+                  :key="item.name"
+                  :href="item.href"
+                  :class="[
+                    item.current
+                      ? 'bg-gray-900 text-white dark:bg-gray-950/50'
+                      : 'text-gray-300 hover:bg-white/5 hover:text-white',
+                    'rounded-md px-3 py-2 text-sm font-medium',
+                  ]"
+                  :aria-current="item.current ? 'page' : undefined"
+                  >{{ item.name }}</a
+                >
+              </div>
+            </div>
+            <!-- Adiciona o menu de pastas -->
+            <div class="ml-6 relative">
+              <FolderMenu />
+            </div>
+          </div>
+          <div class="hidden md:block">
+            <div class="ml-4 flex items-center md:ml-6">
+              <!-- Removido o botão de notificações -->
+              <Menu as="div" class="relative ml-3">
+                <MenuButton
+                  class="relative flex max-w-xs items-center rounded-full hover:text-white focus:outline-2 text-gray-400
+                   focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                >
+                  <span class="absolute -inset-1.5" />
+                  <span class="sr-only">Abrir menu do usuário</span>
+                  <UserCircleIcon class="size-8" />
+                </MenuButton>
+                <transition
+                  enter-active-class="transition ease-out duration-100"
+                  enter-from-class="transform opacity-0 scale-95"
+                  enter-to-class="transform scale-100"
+                  leave-active-class="transition ease-in duration-75"
+                  leave-from-class="transform scale-100"
+                  leave-to-class="transform opacity-0 scale-95"
+                >
+                  <MenuItems
+                    class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg outline-1 outline-black/5 dark:bg-gray-800 dark:shadow-none dark:-outline-offset-1 dark:outline-white/10"
+                  >
+                    <MenuItem v-for="item in userNavigation" :key="item.name" v-slot="{ active }">
+                      <button
+                        v-if="item.action"
+                        @click="item.action"
+                        :class="[
+                          active ? 'bg-gray-100 outline-hidden dark:bg-white/5' : '',
+                          'block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 w-full text-left',
+                        ]"
+                      >
+                        {{ item.name }}
+                      </button>
+                      <a
+                        v-else
+                        :href="item.href"
+                        :class="[
+                          active ? 'bg-gray-100 outline-hidden dark:bg-white/5' : '',
+                          'block px-4 py-2 text-sm text-gray-700 dark:text-gray-300',
+                        ]"
+                        >{{ item.name }}</a
+                      >
+                    </MenuItem>
+                  </MenuItems>
+                </transition>
+              </Menu>
+            </div>
+          </div>
+          <div class="-mr-2 flex md:hidden">
+            <!-- Mobile menu button -->
+            <DisclosureButton
+              class="relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-white/5 hover:text-white focus:outline-2 focus:outline-offset-2 focus:outline-indigo-500"
+            >
+              <span class="absolute -inset-0.5" />
+              <span class="sr-only">Abrir menu principal</span>
+              <Bars3Icon v-if="!open" class="block size-6" aria-hidden="true" />
+              <XMarkIcon v-else class="block size-6" aria-hidden="true" />
+            </DisclosureButton>
+          </div>
+        </div>
+      </div>
+      <DisclosurePanel class="md:hidden">
+        <div class="space-y-1 px-2 pt-2 pb-3 sm:px-3">
+          <DisclosureButton
+            v-for="item in navigation"
+            :key="item.name"
+            as="a"
+            :href="item.href"
+            :class="[
+              item.current
+                ? 'bg-gray-900 text-white dark:bg-gray-950/50'
+                : 'text-gray-300 hover:bg-white/5 hover:text-white',
+              'block rounded-md px-3 py-2 text-base font-medium',
+            ]"
+            :aria-current="item.current ? 'page' : undefined"
+            >{{ item.name }}</DisclosureButton
+          >
+        </div>
+        <div class="border-t border-white/10 pt-4 pb-3">
+          <div class="flex items-center px-5">
+            <div class="shrink-0">
+              <UserCircleIcon class="size-10 text-gray-100 " />
+            </div>
+            <div class="ml-3">
+              <div class="text-base/5 font-medium text-white">{{ user.name }}</div>
+              <div class="text-sm font-medium text-gray-400">{{ user.email }}</div>
+            </div>
+            <!-- Removido o botão de notificações -->
+          </div>
+          <div class="mt-3 space-y-1 px-2">
+            <DisclosureButton
+              v-for="item in userNavigation"
+              :key="item.name"
+              as="button"
+              @click="item.action ? item.action() : null"
+              class="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-white/5 hover:text-white w-full text-left"
+              >{{ item.name }}</DisclosureButton
+            >
+          </div>
+        </div>
+      </DisclosurePanel>
+    </Disclosure>
+    <header
+      v-if="autenticacaoStore.autenticado"
+      class="relative bg-white shadow-sm dark:bg-gray-800 dark:shadow-none dark:after:pointer-events-none dark:after:absolute dark:after:inset-x-0 dark:after:inset-y-0 dark:after:border-y dark:after:border-white/10"
+    >
+      <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Tarefas</h1>
+      </div>
+    </header>
+    <main>
+      <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <RouterView />
+      </div>
+    </main>
+  </div>
 </template>
-<script lang="ts" setup>
-import { useAutenticacaoStore } from '@/stores/auth'
-import { RouterView, useRouter } from 'vue-router'
 
+<script lang="ts" setup>
 import {
-  VApp,
-  VAppBar,
-  VAppBarTitle,
-  VBtn,
-  VDivider,
-  VList,
-  VListItem,
-  VListItemTitle,
-  VMain,
-  VMenu,
-  VSpacer,
-} from 'vuetify/components'
+  Disclosure,
+  DisclosureButton,
+  DisclosurePanel,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+} from '@headlessui/vue'
+import { Bars3Icon, XMarkIcon, UserCircleIcon } from '@heroicons/vue/24/outline'
+import { useAutenticacaoStore } from '@/stores/auth'
+import { useFoldersStore } from '@/stores/folders'
+import { RouterView, useRouter } from 'vue-router'
+import { computed } from 'vue'
+import FolderMenu from '@/components/FolderMenu.vue'
 
 const autenticacaoStore = useAutenticacaoStore()
+const foldersStore = useFoldersStore()
 const router = useRouter()
+
+const user = computed(() => ({
+  name: autenticacaoStore.usuario?.nomeUsuario || 'Usuário',
+  email: '',
+  imageUrl:
+    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+}))
+
+const navigation = computed(() =>
+  foldersStore.folders.map(folder => ({
+    name: folder.name,
+    href: `/folders/${folder.id}`,
+    current: router.currentRoute.value.path === `/folders/${folder.id}`
+  }))
+)
 
 const fazerLogout = () => {
   autenticacaoStore.sair()
   router.push('/login')
 }
+
+const userNavigation = computed(() => [
+  { name: 'Seu perfil', href: '#' },
+  { name: 'Configurações', href: '#' },
+  { name: 'Sair', action: fazerLogout },
+  { name: 'Registrar novo usuário', href: '/register' },
+])
 </script>
 
-<style></style>
+<style>
+/* Nenhum estilo global necessário, tudo via Tailwind */
+</style>

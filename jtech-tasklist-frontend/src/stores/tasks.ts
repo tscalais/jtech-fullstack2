@@ -1,73 +1,94 @@
-import { useLocalStorage } from '@/composables/useLocalStorage'
-import type { Tarefa } from '@/types'
 import { defineStore } from 'pinia'
+import type { Task } from '@/types'
+import {
+  listTasks,
+  getTask,
+  createTask,
+  updateTask,
+  deleteTask,
+} from '@/lib/api/client'
 
-const getNextId = (items: Tarefa[]): number => {
-  const ids = items.map((item) => item.id)
-  const maxId = ids.length > 0 ? Math.max(...ids) : 0
-  return maxId + 1
-}
-
-type TarefasPorListaId = { [listaId: number]: Tarefa[] }
-const tarefas: import('vue').Ref<TarefasPorListaId> = useLocalStorage('jtech-tasks', {})
-
-export const useTarefasStore = defineStore('tarefas', {
+export const useTasksStore = defineStore('tasks', {
   state: () => ({
-    tarefas: tarefas.value,
+    tasks: [] as Task[],
+    activeTaskId: 0 as number,
+    loading: false as boolean,
+    error: '' as string,
   }),
   actions: {
-    adicionarTarefa(listaId: number, titulo: string) {
-      if (!this.tarefas[listaId]) {
-        this.tarefas[listaId] = []
-      }
-
-      const tituloJaExiste = this.tarefas[listaId].some(
-        (tarefa) => tarefa.titulo.toLowerCase().trim() === titulo.toLowerCase().trim(),
-      )
-
-      if (tituloJaExiste) {
-        throw new Error(`Já existe uma tarefa com o título "${titulo}" nesta lista`)
-      }
-
-      const novaTarefa: Tarefa = {
-        id: getNextId(this.tarefas[listaId]),
-        listaId,
-        titulo: titulo.trim(),
-        concluida: false,
-        criadaEm: Date.now(),
-      }
-      this.tarefas[listaId].push(novaTarefa)
-    },
-    excluirTarefa(listaId: number, tarefaId: number) {
-      if (this.tarefas[listaId]) {
-        this.tarefas[listaId] = this.tarefas[listaId].filter((tarefa) => tarefa.id !== tarefaId)
+    async fetchTasks(folderId: number) {
+      this.loading = true
+      this.error = ''
+      try {
+        const data = await listTasks(folderId)
+        this.tasks = data
+        this.activeTaskId = data.length > 0 ? data[0].id : 0
+      } catch (e: any) {
+        this.error = e.message || 'Erro ao carregar tarefas'
+      } finally {
+        this.loading = false
       }
     },
-    alternarTarefa(listaId: number, tarefaId: number) {
-      const tarefa = this.tarefas[listaId]?.find((tarefa) => tarefa.id === tarefaId)
-      if (tarefa) {
-        tarefa.concluida = !tarefa.concluida
-      }
-      return tarefa
-    },
-    editarTarefa(listaId: number, tarefaId: number, novoTitulo: string) {
-      const tituloJaExiste = this.tarefas[listaId]?.some(
-        (tarefa) =>
-          tarefa.id !== tarefaId &&
-          tarefa.titulo.toLowerCase().trim() === novoTitulo.toLowerCase().trim(),
-      )
-
-      if (tituloJaExiste) {
-        throw new Error(`Já existe uma tarefa com o título "${novoTitulo}" nesta lista`)
-      }
-
-      const tarefa = this.tarefas[listaId]?.find((tarefa) => tarefa.id === tarefaId)
-      if (tarefa) {
-        tarefa.titulo = novoTitulo.trim()
+    async createTask(folderId: number, task: Partial<Task>) {
+      this.loading = true
+      this.error = ''
+      try {
+        const newTask = await createTask(folderId, task)
+        this.tasks.push(newTask)
+        this.activeTaskId = newTask.id
+        return newTask
+      } catch (e: any) {
+        this.error = e.message || 'Erro ao criar tarefa'
+        throw e
+      } finally {
+        this.loading = false
       }
     },
-    excluirTarefasPorListaId(listaId: number) {
-      delete this.tarefas[listaId]
+    async updateTask(folderId: number, taskId: number, task: Partial<Task>) {
+      this.loading = true
+      this.error = ''
+      try {
+        const updated = await updateTask(folderId, taskId, task)
+        const idx = this.tasks.findIndex(t => t.id === taskId)
+        if (idx !== -1) this.tasks[idx] = updated
+        return updated
+      } catch (e: any) {
+        this.error = e.message || 'Erro ao atualizar tarefa'
+        throw e
+      } finally {
+        this.loading = false
+      }
+    },
+    async deleteTask(folderId: number, taskId: number) {
+      this.loading = true
+      this.error = ''
+      try {
+        await deleteTask(folderId, taskId)
+        this.tasks = this.tasks.filter(t => t.id !== taskId)
+        if (this.activeTaskId === taskId) {
+          this.activeTaskId = this.tasks.length > 0 ? this.tasks[0].id : 0
+        }
+      } catch (e: any) {
+        this.error = e.message || 'Erro ao excluir tarefa'
+        throw e
+      } finally {
+        this.loading = false
+      }
+    },
+    async getTask(folderId: number, taskId: number) {
+      this.loading = true
+      this.error = ''
+      try {
+        return await getTask(folderId, taskId)
+      } catch (e: any) {
+        this.error = e.message || 'Erro ao buscar tarefa'
+        throw e
+      } finally {
+        this.loading = false
+      }
+    },
+    setActiveTask(id: number) {
+      this.activeTaskId = id
     },
   },
 })

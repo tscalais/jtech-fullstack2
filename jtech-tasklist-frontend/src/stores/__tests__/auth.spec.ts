@@ -1,53 +1,69 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { useAutenticacaoStore } from '../auth'
+import api from '@/lib/api/client'
 
-//Não importar o store no topo para evitar cache entre testes.
-let useAutenticacaoStore: typeof import('../auth').useAutenticacaoStore
+vi.mock('@/lib/api/client')
 
-// Helper para mock de localStorage isolado por teste
-function mockLocalStorage() {
-  const store: Record<string,string> = {}
-  return {
-    getItem: (k: string) => (k in store ? store[k] : null),
-    setItem: (k: string, v: string) => { store[k] = v },
-    removeItem: (k: string) => { delete store[k] },
-    clear: () => { Object.keys(store).forEach(k => delete store[k]) },
-  }
-}
+// Helper para tipar corretamente o mock do api.post
+const mockApiPost = api.post as unknown as ReturnType<typeof vi.fn>
 
-describe('auth store', () => {
-  beforeEach(async () => {
-    vi.resetModules()
+describe('AuthStore', () => {
+  beforeEach(() => {
     setActivePinia(createPinia())
-    // @ts-expect-error mock localStorage
-    global.localStorage = mockLocalStorage()
-    ;({ useAutenticacaoStore } = await import('../auth'))
+    localStorage.clear()
+    vi.clearAllMocks()
   })
 
-  it('login sucesso quando usuario===senha', async () => {
+  it('faz login com sucesso e armazena token e usuário', async () => {
+    const mockToken = 'mocked-token'
+    mockApiPost.mockResolvedValueOnce({ data: { token: mockToken } })
     const store = useAutenticacaoStore()
-    const ok = store.entrar('alice','alice')
-    // aguarda watch persistir
-    await Promise.resolve()
-    expect(ok).toBe(true)
-    expect(store.autenticado).toBe(true)
-    expect(store.usuario?.nomeUsuario).toBe('alice')
-    expect(JSON.parse(localStorage.getItem('auth-user')!)).toEqual({ nomeUsuario: 'alice' })
+    const result = await store.entrar('usuario', 'senha')
+    expect(result).toBe(true)
+    expect(store.token).toBe(mockToken)
+    expect(store.usuario).toEqual({ nomeUsuario: 'usuario', token: mockToken })
+    const userStr = localStorage.getItem('auth-user')
+    expect(userStr).not.toBeNull()
+    expect(JSON.parse(userStr!)).toEqual({ nomeUsuario: 'usuario', token: mockToken })
   })
 
-  it('login falha quando credenciais inválidas', () => {
+  it('trata erro de login', async () => {
+    mockApiPost.mockRejectedValueOnce({ response: { data: { message: 'Credenciais inválidas' } } })
     const store = useAutenticacaoStore()
-    const ok = store.entrar('alice','bob')
-    expect(ok).toBe(false)
-    expect(store.autenticado).toBe(false)
+    const result = await store.entrar('usuario', 'senha')
+    expect(result).toBe(false)
+    expect(store.token).toBe('')
     expect(store.usuario).toBeNull()
+    expect(store.erro).toBe('Credenciais inválidas')
   })
 
-  it('sair limpa usuario e localStorage', async () => {
+  it('faz registro e login automático', async () => {
+    mockApiPost.mockResolvedValueOnce({}) // register
+    mockApiPost.mockResolvedValueOnce({ data: { token: 'token-reg' } }) // login
     const store = useAutenticacaoStore()
-    store.entrar('x','x')
-    await Promise.resolve()
+    const result = await store.registrar('novo', 'senha')
+    expect(result).toBe(true)
+    expect(store.token).toBe('token-reg')
+    expect(store.usuario).toEqual({ nomeUsuario: 'novo', token: 'token-reg' })
+  })
+
+  it('trata erro de registro', async () => {
+    mockApiPost.mockRejectedValueOnce({ response: { data: { message: 'Usuário já existe' } } })
+    const store = useAutenticacaoStore()
+    const result = await store.registrar('existe', 'senha')
+    expect(result).toBe(false)
+    expect(store.token).toBe('')
+    expect(store.usuario).toBeNull()
+    expect(store.erro).toBe('Usuário já existe')
+  })
+
+  it('faz logout limpando token e usuário', () => {
+    const store = useAutenticacaoStore()
+    store.usuario = { nomeUsuario: 'u', token: 'tok' }
+    localStorage.setItem('auth-user', JSON.stringify(store.usuario))
     store.sair()
+    expect(store.token).toBe('')
     expect(store.usuario).toBeNull()
     expect(localStorage.getItem('auth-user')).toBeNull()
   })
