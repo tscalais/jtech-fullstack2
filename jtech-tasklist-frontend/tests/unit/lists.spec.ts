@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-let useListasStore: typeof import('@/stores/lists').useListasStore
+let useTasksStore: typeof import('@/stores/tasks').useTasksStore
 
 function mockLocalStorage() {
 	const store: Record<string,string> = {}
@@ -12,61 +12,60 @@ function mockLocalStorage() {
 	}
 }
 
-describe('lists store', () => {
+describe('tasks store', () => {
 	beforeEach(async () => {
 		vi.resetModules()
 		setActivePinia(createPinia())
-		// @ts-expect-error sobrescrevendo localStorage
-		global.localStorage = mockLocalStorage()
-		;({ useListasStore } = await import('@/stores/lists'))
+		vi.stubGlobal('localStorage', mockLocalStorage())
+		;({ useTasksStore } = await import('@/stores/tasks'))
 	})
 
-	it('criarLista adiciona lista e define ativa', () => {
-		const store = useListasStore()
-		store.criarLista('Trabalho')
-		expect(store.listas.length).toBe(1)
-		expect(store.listas[0].nome).toBe('Trabalho')
-		expect(store.listaAtivaId).toBe(store.listas[0].id)
+	it('createTask adiciona task e define ativa', () => {
+		const store = useTasksStore()
+		store.createTask('Trabalho')
+		expect(store.tasks.length).toBe(1)
+		expect(store.tasks[0].name).toBe('Trabalho')
+		expect(store.activeTaskId).toBe(store.tasks[0].id)
 	})
 
-	it('criarLista com nome duplicado lança erro', () => {
-		const store = useListasStore()
-		store.criarLista('Trabalho')
-		expect(() => store.criarLista('trabalho')).toThrow(/já existe/i)
+	it('createTask com nome duplicado lança erro', () => {
+		const store = useTasksStore()
+		store.createTask('Trabalho')
+		expect(() => store.createTask('trabalho')).toThrow(/já existe/i)
 	})
 
-	it('renomearLista altera nome', () => {
-		const store = useListasStore()
-		store.criarLista('Old')
-		const id = store.listas[0].id
-		store.renomearLista(id,'Novo')
-		expect(store.listas[0].nome).toBe('Novo')
+	it('renameTask altera nome', () => {
+		const store = useTasksStore()
+		store.createTask('Old')
+		const id = store.tasks[0].id
+		store.renameTask(id,'Novo')
+		expect(store.tasks[0].name).toBe('Novo')
 	})
 
-	it('renomearLista para duplicado lança erro', () => {
-		const store = useListasStore()
-		store.criarLista('Uma')
-		store.criarLista('Duas')
-		const id = store.listas.find(l => l.nome==='Uma')!.id
-		expect(() => store.renomearLista(id,'duas')).toThrow(/já existe/i)
+	it('renameTask para duplicado lança erro', () => {
+		const store = useTasksStore()
+		store.createTask('Uma')
+		store.createTask('Duas')
+		const id = store.tasks.find(t => t.name==='Uma')!.id
+		expect(() => store.renameTask(id,'duas')).toThrow(/já existe/i)
 	})
 
-	it('excluirLista remove e ajusta ativa', () => {
-		const store = useListasStore()
-		store.criarLista('A')
-		store.criarLista('B')
-		const idA = store.listas.find(l=>l.nome==='A')!.id
-		store.excluirLista(idA)
-		expect(store.listas.some(l=>l.id===idA)).toBe(false)
-		expect(store.listaAtivaId).toBe(store.listas[0].id)
+	it('deleteTask remove e ajusta ativa', () => {
+		const store = useTasksStore()
+		store.createTask('A')
+		store.createTask('B')
+		const idA = store.tasks.find(t=>t.name==='A')!.id
+		store.deleteTask(idA)
+		expect(store.tasks.some(t=>t.id===idA)).toBe(false)
+		expect(store.activeTaskId).toBe(store.tasks[0].id)
 	})
 
-	it('definirListaAtiva muda id', () => {
-		const store = useListasStore()
-		store.criarLista('A')
-		store.criarLista('B')
-		const idB = store.listas.find(l=>l.nome==='B')!.id
-		store.definirListaAtiva(idB)
-		expect(store.listaAtivaId).toBe(idB)
+	it('setActiveTask muda id', () => {
+		const store = useTasksStore()
+		store.createTask('A')
+		store.createTask('B')
+		const idB = store.tasks.find(t=>t.name==='B')!.id
+		store.setActiveTask(idB)
+		expect(store.activeTaskId).toBe(idB)
 	})
 })

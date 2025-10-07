@@ -14,22 +14,21 @@ const form = reactive({
 const erroLogin = ref('')
 const tentativasLogin = ref(0)
 
-const fazerLogin = () => {
-  const sucesso = autenticacaoStore.entrar(form.nomeUsuario, form.senha)
+const fazerLogin = async () => {
+  const sucesso = await autenticacaoStore.entrar(form.nomeUsuario, form.senha)
   if (sucesso) {
     erroLogin.value = ''
     tentativasLogin.value = 0
     router.push('/tarefas')
   } else {
     tentativasLogin.value++
-
+    let mensagem = ''
     if (tentativasLogin.value === 1) {
-      erroLogin.value =
-        'Usuário ou senha incorretos.\n Dica: Use o mesmo texto para usuário e senha.'
+      mensagem = 'Usuário ou senha incorretos. Tente novamente.'
     } else if (tentativasLogin.value === 2) {
-      erroLogin.value = 'Lembre-se: o usuário e a senha devem ser idênticos para fazer login!'
+      mensagem = 'Verifique se digitou corretamente seu usuário e senha.'
     } else {
-      erroLogin.value = 'Ainda não conseguiu? Experimente: Seu Nome em usuário e senha.'
+      mensagem = 'Se esqueceu sua senha, procure o administrador do sistema.'
     }
   }
 }
@@ -74,10 +73,3 @@ const fazerLogin = () => {
     </v-card>
   </v-container>
 </template>
-
-<style scoped>
-.login-bg {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #e3f0ff 0%, #f8fafc 100%);
-}
-</style>

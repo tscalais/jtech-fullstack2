@@ -1,8 +1,8 @@
 import { ref, watch } from 'vue'
 
-export function useLocalStorage(key, initialValue) {
+export function useLocalStorage<T>(key: string, initialValue: T) {
   const storedValue = localStorage.getItem(key)
-  const value = ref(storedValue ? JSON.parse(storedValue) : initialValue)
+  const value = ref<T>(storedValue ? JSON.parse(storedValue) : initialValue)
 
   watch(
     value,

@@ -58,4 +58,6 @@ const fazerLogout = () => {
 }
 </script>
 
-<style></style>
+<style>
+/* Nenhum estilo global necessário, tudo via Tailwind */
+</style>
