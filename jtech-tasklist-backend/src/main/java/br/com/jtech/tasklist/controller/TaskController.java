@@ -1,6 +1,5 @@
 package br.com.jtech.tasklist.controller;
 
-import br.com.jtech.tasklist.dto.TaskPinnedRequest;
 import br.com.jtech.tasklist.model.TaskDTO;
 import br.com.jtech.tasklist.model.entities.TaskEntity;
 import br.com.jtech.tasklist.service.TaskService;
@@ -25,9 +24,9 @@ public class TaskController {
         return ResponseEntity.ok(updated);
     }
 
-    @PatchMapping("/{id}/pinned")
-    public ResponseEntity<TaskDTO> updatePinned(@PathVariable Long id, @RequestBody TaskPinnedRequest request) {
-        TaskDTO updated = taskService.updatePinned(id, request.isPinned());
+    @PatchMapping("/{id}/favorite")
+    public ResponseEntity<TaskDTO> updateFavorite(@PathVariable Long id) {
+        TaskDTO updated = taskService.toggleFavorite(id);
         return ResponseEntity.ok(updated);
     }
 

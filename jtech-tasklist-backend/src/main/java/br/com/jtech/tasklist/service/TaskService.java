@@ -1,5 +1,6 @@
 package br.com.jtech.tasklist.service;
 
+import br.com.jtech.tasklist.model.TaskDTO;
 import br.com.jtech.tasklist.model.entities.FolderEntity;
 import br.com.jtech.tasklist.model.entities.TaskEntity;
 import br.com.jtech.tasklist.repository.TaskRepository;
@@ -23,9 +24,9 @@ public class TaskService {
     public TaskEntity getTask(Long folderId, Long taskId) {
         folderService.validateOwner(folderId);
         TaskEntity task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada"));
         if (!task.getFolder().getId().equals(folderId)) {
-            throw new RuntimeException("Task does not belong to this folder");
+            throw new RuntimeException("A tarefa não pertence a esta pasta");
         }
         return task;
     }
@@ -40,9 +41,9 @@ public class TaskService {
     public TaskEntity updateTask(Long folderId, Long taskId, TaskEntity task) {
         folderService.validateOwner(folderId);
         TaskEntity existing = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada"));
         if (!existing.getFolder().getId().equals(folderId)) {
-            throw new RuntimeException("Task does not belong to this folder");
+            throw new RuntimeException("A tarefa não pertence a esta pasta");
         }
         task.setId(taskId);
         task.setFolder(existing.getFolder());
@@ -52,9 +53,9 @@ public class TaskService {
     public void deleteTask(Long folderId, Long taskId) {
         folderService.validateOwner(folderId);
         TaskEntity task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada"));
         if (!task.getFolder().getId().equals(folderId)) {
-            throw new RuntimeException("Task does not belong to this folder");
+            throw new RuntimeException("A tarefa não pertence a esta pasta");
         }
         taskRepository.deleteById(taskId);
     }
@@ -62,18 +63,18 @@ public class TaskService {
     public TaskEntity updateTaskStatus(Long folderId, Long taskId, boolean completed) {
         folderService.validateOwner(folderId);
         TaskEntity task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada"));
         if (!task.getFolder().getId().equals(folderId)) {
-            throw new RuntimeException("Task does not belong to this folder");
+            throw new RuntimeException("A tarefa não pertence a esta pasta");
         }
         task.setCompleted(completed);
         return taskRepository.save(task);
     }
 
-    public TaskDTO updatePinned(Long taskId, boolean pinned) {
+    public TaskDTO toggleFavorite(Long taskId) {
         TaskEntity task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
-        task.setPinned(pinned);
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada"));
+        task.setFavorite(!task.isFavorite());
         task = taskRepository.save(task);
         return TaskDTO.of(task);
     }

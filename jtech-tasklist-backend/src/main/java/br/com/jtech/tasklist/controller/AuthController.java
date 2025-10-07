@@ -1,4 +1,3 @@
-
 package br.com.jtech.tasklist.controller;
 
 import br.com.jtech.tasklist.dto.*;
@@ -29,5 +28,14 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
         return ResponseEntity.ok(authService.authenticate(request.getUserName(), request.getPassword()));
     }
-}
 
+    @GetMapping("/validate")
+    public ResponseEntity<Void> validateToken(@RequestHeader("Authorization") String authorizationHeader) {
+        boolean isValid = authService.validateToken(authorizationHeader);
+        if (isValid) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+}

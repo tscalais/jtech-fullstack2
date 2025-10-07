@@ -39,3 +39,7 @@ out/
 
 ### Logs da aplicação ###
 logs/
+
+### Banco de dados ###
+h2_db/
+

@@ -12,6 +12,7 @@ public class TaskDTO {
     private String title;
     private String description;
     private boolean completed;
+    private boolean favorite;
     private FolderDTO folder;
 
     public static TaskDTO of(TaskEntity entity) {
@@ -21,6 +22,7 @@ public class TaskDTO {
                 .title(entity.getTitle())
                 .description(entity.getDescription())
                 .completed(entity.isCompleted())
+                .favorite(entity.isFavorite())
                 .folder(FolderDTO.of(entity.getFolder()))
                 .build();
     }
@@ -31,6 +33,7 @@ public class TaskDTO {
                 .title(this.title)
                 .description(this.description)
                 .completed(this.completed)
+                .favorite(this.favorite)
                 .folder(this.folder != null ? this.folder.toEntity() : null)
                 .build();
     }

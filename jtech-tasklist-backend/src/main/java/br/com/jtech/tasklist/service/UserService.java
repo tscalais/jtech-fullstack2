@@ -2,8 +2,8 @@ package br.com.jtech.tasklist.service;
 
 import br.com.jtech.tasklist.config.infra.exceptions.UserAlreadyExistsException;
 import br.com.jtech.tasklist.model.UserDTO;
-import br.com.jtech.tasklist.model.entities.UserEntity;
-import br.com.jtech.tasklist.repository.UserRepository;
+import br.com.jtech.tasklist.model.entities.*;
+import br.com.jtech.tasklist.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,14 +21,54 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private FolderRepository folderRepository;
+
+    @Autowired
+    private TaskRepository taskRepository;
+
     public UserDTO register(String name, String password) {
         try {
             UserEntity user = new UserEntity();
             user.setUserName(name);
             user.setPassword(passwordEncoder.encode(password));
-            return UserDTO.of(userRepository.save(user));
+            user = userRepository.save(user);
+
+            // Criar pasta de exemplo
+            FolderEntity folder = new FolderEntity();
+            folder.setName("Reforma do Escritório");
+            folder.setOwner(user);
+            folder = folderRepository.save(folder);
+
+            // Criar tasks de exemplo
+            TaskEntity task = new TaskEntity();
+            task.setTitle("Planejamento");
+            task.setDescription("Esta é uma tarefa de exemplo criada automaticamente.");
+            task.setFolder(folder);
+            task.setFavorite(true);
+            task.setCompleted(false);
+            taskRepository.save(task);
+
+            task = new TaskEntity();
+            task.setTitle("Compras");
+            task.setDescription("Esta é uma tarefa de exemplo criada automaticamente.");
+            task.setFolder(folder);
+            task.setFavorite(true);
+            task.setCompleted(false);
+            taskRepository.save(task);
+
+
+            task = new TaskEntity();
+            task.setTitle("Execução");
+            task.setDescription("Esta é uma tarefa de exemplo criada automaticamente.");
+            task.setFolder(folder);
+            task.setCompleted(false);
+            taskRepository.save(task);
+
+            return UserDTO.of(user);
+
         } catch (DataIntegrityViolationException e) {
-            throw new UserAlreadyExistsException("Usuário já existe ou violação de chave primária.");
+            throw new UserAlreadyExistsException("Usuário já existe.");
         }
     }
 

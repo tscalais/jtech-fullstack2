@@ -23,6 +23,9 @@ public class TaskEntity {
     @Column(name = "completed", nullable = false)
     private boolean completed;
 
+    @Column(name = "favorite", nullable = false)
+    private boolean favorite;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "folder_id", nullable = false)
     private FolderEntity folder;

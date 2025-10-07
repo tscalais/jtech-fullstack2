@@ -33,4 +33,16 @@ public class AuthService {
         }
         throw new InvalidCredentialsException("Invalid username or password");
     }
+
+    public boolean validateToken(String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return false;
+        }
+        String token = authorizationHeader.substring(7);
+        try {
+            return jwtTokenService.validateToken(token);
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }
