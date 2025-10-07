@@ -80,8 +80,7 @@ public class FolderService {
     }
 
     public FolderEntity getFolderEntity(Long id) {
-        FolderEntity folderEntity = folderRepository.findById(id).orElseThrow(() -> new RuntimeException("Folder not found"));
-        return folderEntity;
+        return folderRepository.findById(id).orElseThrow(() -> new RuntimeException("Folder not found"));
     }
 
     public void validateOwner(Long folderId) {

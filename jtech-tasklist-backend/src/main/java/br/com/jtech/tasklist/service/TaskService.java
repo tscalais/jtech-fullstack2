@@ -58,5 +58,23 @@ public class TaskService {
         }
         taskRepository.deleteById(taskId);
     }
-}
 
+    public TaskEntity updateTaskStatus(Long folderId, Long taskId, boolean completed) {
+        folderService.validateOwner(folderId);
+        TaskEntity task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        if (!task.getFolder().getId().equals(folderId)) {
+            throw new RuntimeException("Task does not belong to this folder");
+        }
+        task.setCompleted(completed);
+        return taskRepository.save(task);
+    }
+
+    public TaskDTO updatePinned(Long taskId, boolean pinned) {
+        TaskEntity task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        task.setPinned(pinned);
+        task = taskRepository.save(task);
+        return TaskDTO.of(task);
+    }
+}

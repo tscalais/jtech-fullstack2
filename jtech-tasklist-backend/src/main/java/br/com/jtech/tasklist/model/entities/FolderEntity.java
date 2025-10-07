@@ -5,12 +5,12 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Entity
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Entity(name = "folders")
 public class FolderEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

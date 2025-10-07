@@ -1,5 +1,6 @@
 package br.com.jtech.tasklist.config.infra.jwt;
 
+import br.com.jtech.tasklist.config.infra.exceptions.InvalidCredentialsException;
 import br.com.jtech.tasklist.model.entities.UserEntity;
 import br.com.jtech.tasklist.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         UserEntity user = userRepository.findByUserName(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + username));
+                .orElseThrow(() -> new InvalidCredentialsException("Usuário não encontrado: " + username));
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getUserName())
                 .password(user.getPassword())

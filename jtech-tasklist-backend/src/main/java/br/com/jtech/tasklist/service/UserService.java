@@ -9,6 +9,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -45,4 +46,7 @@ public class UserService {
         return userRepository.findByUserName(userName).map(UserDTO::of);
     }
 
+    public List<UserDTO> findAll() {
+        return userRepository.findAll().stream().map(UserDTO::of).toList();
+    }
 }
