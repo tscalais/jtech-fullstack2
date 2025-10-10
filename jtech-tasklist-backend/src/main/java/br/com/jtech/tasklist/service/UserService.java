@@ -43,7 +43,7 @@ public class UserService {
             // Criar tasks de exemplo
             TaskEntity task = new TaskEntity();
             task.setTitle("Planejamento");
-            task.setDescription("Esta é uma tarefa de exemplo criada automaticamente.");
+            task.setDescription("Definir o escopo e o orçamento da reforma.");
             task.setFolder(folder);
             task.setFavorite(true);
             task.setCompleted(false);
@@ -51,19 +51,26 @@ public class UserService {
 
             task = new TaskEntity();
             task.setTitle("Compras");
-            task.setDescription("Esta é uma tarefa de exemplo criada automaticamente.");
+            task.setDescription("Lista de compras para a reforma.");
             task.setFolder(folder);
             task.setFavorite(true);
             task.setCompleted(false);
             taskRepository.save(task);
 
-
             task = new TaskEntity();
             task.setTitle("Execução");
-            task.setDescription("Esta é uma tarefa de exemplo criada automaticamente.");
+            task.setDescription("Acompanhamento da execução da reforma.");
             task.setFolder(folder);
             task.setCompleted(false);
             taskRepository.save(task);
+
+            task = new TaskEntity();
+            task.setTitle("Finalização");
+            task.setDescription("Verificar se tudo está conforme o planejado.");
+            task.setFolder(folder);
+            task.setCompleted(false);
+            taskRepository.save(task);
+
 
             return UserDTO.of(user);
 
