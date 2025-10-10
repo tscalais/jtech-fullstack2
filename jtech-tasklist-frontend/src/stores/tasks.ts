@@ -6,6 +6,7 @@ import {
   createTask,
   updateTask,
   deleteTask,
+  updateFavorite,
 } from '@/lib/api/client'
 
 export const useTasksStore = defineStore('tasks', {
@@ -20,6 +21,8 @@ export const useTasksStore = defineStore('tasks', {
       this.loading = true
       this.error = ''
       try {
+        debugger
+        console.log('folderId',folderId)
         const data = await listTasks(folderId)
         this.tasks = data
         this.activeTaskId = data.length > 0 ? data[0].id : 0
@@ -89,6 +92,21 @@ export const useTasksStore = defineStore('tasks', {
     },
     setActiveTask(id: number) {
       this.activeTaskId = id
+    },
+    async toggleFavorite(folderId: number, taskId: number) {
+      this.loading = true
+      this.error = ''
+      try {
+        const updated = await updateFavorite(folderId, taskId)
+        const idx = this.tasks.findIndex(t => t.id === taskId)
+        if (idx !== -1) this.tasks[idx] = updated
+        return updated
+      } catch (e: any) {
+        this.error = e.message || 'Erro ao atualizar favorito'
+        throw e
+      } finally {
+        this.loading = false
+      }
     },
   },
 })

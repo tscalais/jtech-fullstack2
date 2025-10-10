@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JTech TaskList Dashboard - Keep Style</title>
+    <!-- Carregamento do Tailwind CSS (CDN para simulação) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Configuração da fonte Inter e scrollbar customizada */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+        }
+        /* Estilos para o scrollbar (para melhor visual em painéis) */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Classes de responsividade para ocultar e mostrar painéis */
+        .panel-hidden { display: none !important; }
+
+        @media (max-width: 1024px) {
+            .mobile-hidden { display: none; }
+            .mobile-only-block { display: block; }
+        }
+        @media (min-width: 1024px) {
+            .mobile-only-block { display: none; }
+        }
+
+        /* Estilos específicos para o Modal de Detalhes */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Estilo do Card (Simulando uma Nota do Keep) */
+        .task-card-style {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            transition: all 0.2s ease;
+        }
+        .task-card-style:hover {
+             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            500: '#6366f1', // Indigo
+                            600: '#4f46e5',
+                        },
+                    }
+                }
+            }
+        }
+
+        // Funções para gerenciar o Dropdown de Pastas
+        function toggleFolderDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('folder-dropdown-content');
+            const arrow = document.getElementById('folder-arrow');
+            const isHidden = dropdown.classList.contains('panel-hidden');
+
+            if (isHidden) {
+                dropdown.classList.remove('panel-hidden');
+                arrow.classList.add('rotate-180');
+                // Adiciona listener global para fechar ao clicar fora
+                document.addEventListener('click', closeFolderDropdownHandler);
+            } else {
+                dropdown.classList.add('panel-hidden');
+                arrow.classList.remove('rotate-180');
+                document.removeEventListener('click', closeFolderDropdownHandler);
+            }
+        }
+
+        function closeFolderDropdownHandler(event) {
+            const dropdownContent = document.getElementById('folder-dropdown-content');
+            const menuButton = document.getElementById('folder-menu-button');
+
+            // Verifica se o clique foi fora do botão e do conteúdo do dropdown
+            if (!event.target || (!menuButton.contains(event.target) && !dropdownContent.contains(event.target))) {
+                const arrow = document.getElementById('folder-arrow');
+                dropdownContent.classList.add('panel-hidden');
+                arrow.classList.remove('rotate-180');
+                document.removeEventListener('click', closeFolderDropdownHandler);
+            }
+        }
+
+        function selectFolder(folderId, folderName) {
+            // Remove a seleção de todas as pastas
+            document.querySelectorAll('.folder-item').forEach(el => {
+                el.classList.remove('bg-primary-500', 'text-white', 'font-semibold');
+                el.classList.add('hover:bg-gray-100', 'text-gray-700');
+            });
+            // Marca a pasta selecionada
+            document.getElementById(folderId).classList.add('bg-primary-500', 'text-white', 'font-semibold');
+            document.getElementById(folderId).classList.remove('hover:bg-gray-100', 'text-gray-700');
+
+            // Atualiza os displays de pasta
+            document.getElementById('selected-folder-display').textContent = folderName;
+            document.getElementById('current-folder-title').textContent = folderName;
+
+            // Fecha o dropdown após a seleção
+            closeFolderDropdownHandler({target: null});
+            closeTaskDetails();
+        }
+
+        function showTaskDetails(taskId) {
+            console.log(`Detalhes da Tarefa: ${taskId}`);
+            const detailModal = document.getElementById('detail-modal');
+            detailModal.classList.remove('panel-hidden');
+        }
+
+        function closeTaskDetails() {
+             const detailModal = document.getElementById('detail-modal');
+             detailModal.classList.add('panel-hidden');
+        }
+
+        window.onload = () => {
+             // Garante que a primeira pasta esteja selecionada ao carregar
+             selectFolder('folder-1', 'Projeto Alpha');
+             // Inicialmente, o modal de detalhes deve estar oculto
+             document.getElementById('detail-modal').classList.add('panel-hidden');
+        };
+    </script>
+</head>
+<body class="h-screen overflow-hidden flex flex-col">
+
+    <!-- Header (Mobile/Desktop) -->
+    <header class="bg-white border-b border-gray-200 shadow-sm p-4 flex items-center justify-between lg:justify-start lg:gap-6 z-20">
+
+        <!-- Bloco de Pastas (Dropdown) -->
+        <div class="flex items-center space-x-4">
+            <!-- Ícone da Aplicação (sem o menu sidebar) -->
+            <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-4 0V3m0 2v4m0 0h2m-2 0H9m1.5-1.5a.5.5 0 01.5.5v2a.5.5 0 01-1 0v-2a.5.5 0 01.5-.5z"></path></svg>
+
+            <!-- Dropdown de Pastas (Novo Menu de Seleção) -->
+            <div id="folder-dropdown-container" class="relative">
+                <button id="folder-menu-button" class="flex items-center space-x-2 text-xl font-bold text-gray-800 hover:text-primary-600 transition duration-150 p-2 rounded-xl" onclick="toggleFolderDropdown(event)">
+                    <!-- Ícone de Pasta principal (Substitui o Título TaskList no mobile) -->
+                    <svg class="w-6 h-6 text-primary-600 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                    <!-- Nome da Pasta Selecionada -->
+                    <span id="selected-folder-display" class="hidden sm:block">Projeto Alpha</span>
+                    <!-- Down Arrow Icon -->
+                    <svg class="w-4 h-4 transition-transform duration-200" id="folder-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+
+                <!-- Dropdown Content -->
+                <div id="folder-dropdown-content" class="absolute left-0 lg:left-1/2 lg:-translate-x-1/2 mt-2 w-64 md:w-72 bg-white rounded-xl shadow-2xl p-2 z-50 panel-hidden border border-gray-100">
+                    <!-- Lista de Pastas -->
+                    <div class="space-y-1">
+                        <!-- Itens da Pasta (usando a função selectFolder para fechar o menu) -->
+                        <div id="folder-1" data-name="Projeto Alpha" class="folder-item flex items-center justify-between p-3 rounded-xl cursor-pointer transition duration-150 text-gray-700" onclick="selectFolder('folder-1', 'Projeto Alpha')">
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>
+                            <span>Projeto Alpha</span>
+                            </div>
+                            <span class="text-xs bg-gray-200 px-2 py-0.5 rounded-full">12</span>
+                        </div>
+                        <div id="folder-2" data-name="Pessoal" class="folder-item flex items-center justify-between p-3 rounded-xl cursor-pointer hover:bg-gray-100 transition duration-150 text-gray-700" onclick="selectFolder('folder-2', 'Pessoal')">
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                                <span>Pessoal</span>
+                            </div>
+                            <span class="text-xs bg-gray-200 px-2 py-0.5 rounded-full">4</span>
+                        </div>
+                        <div id="folder-3" data-name="Equipe Dev" class="folder-item flex items-center justify-between p-3 rounded-xl cursor-pointer hover:bg-gray-100 transition duration-150 text-gray-700" onclick="selectFolder('folder-3', 'Equipe Dev')">
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M3 20h5V7m0 0v13m0-13h2m-2 0h-2M11 7h2m-2 0H3m8 0V4a2 2 0 00-2-2H5a2 2 0 00-2 2v3"></path></svg>
+                                <span>Equipe Dev</span>
+                            </div>
+                            <span class="text-xs bg-gray-200 px-2 py-0.5 rounded-full">8</span>
+                        </div>
+                    </div>
+                    <!-- Ações da Pasta (Nova Pasta / Entrar com Chave) -->
+                    <div class="p-2 border-t border-gray-200 mt-2 space-y-2">
+                        <button class="w-full flex items-center justify-center space-x-2 bg-primary-600 text-white py-2 rounded-xl hover:bg-primary-700 transition duration-150 shadow-md text-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            <span>Nova Pasta</span>
+                        </button>
+                        <div class="flex space-x-2">
+                            <input type="text" placeholder="Chave de Acesso" class="flex-grow p-2 border border-gray-300 rounded-xl text-sm focus:ring-primary-500 focus:border-primary-500" />
+                            <button class="bg-gray-200 text-gray-700 p-2 rounded-xl hover:bg-gray-300 transition duration-150 text-sm font-medium">Entrar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barra de Pesquisa (Centralizada no Keep Style) -->
+        <div class="flex-grow max-w-lg mx-4">
+            <input type="search" placeholder="Buscar tarefas ou tags..." class="w-full p-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 transition duration-150 shadow-md" />
+        </div>
+
+        <!-- Perfil/Ações -->
+        <div class="flex items-center space-x-4">
+            <button class="text-gray-500 hover:text-primary-600 p-2 rounded-full transition duration-150 mobile-hidden lg:block" aria-label="Notificações">
+                <!-- Ícone de Sino -->
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.456 5.378 6 7.234 6 9.5v5.658A2.032 2.032 0 013.405 17H7m8 0a.75.75 0 01.75.75H14.25a.75.75 0 01-.75-.75m.75 0V20"></path></svg>
+            </button>
+            <div class="flex items-center space-x-2 cursor-pointer p-1 rounded-full hover:bg-gray-100 transition duration-150">
+                <div class="w-8 h-8 rounded-full bg-primary-200 flex items-center justify-center text-primary-600 font-medium text-sm">JS</div>
+                <span class="text-sm font-medium text-gray-700 mobile-hidden lg:block">João Silva</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <!-- Agora a área principal é 100% dedicada ao Painel de Tarefas -->
+    <div class="flex flex-1 overflow-hidden relative">
+
+        <!-- 2. Painel de Tarefas (Conteúdo Principal - Keep Card Grid) -->
+        <div id="task-panel" class="flex-1 min-w-0 bg-f7f9fc p-6 flex flex-col overflow-hidden z-10">
+
+            <!-- O botão de voltar e o título da pasta são removidos pois estão no dropdown -->
+            <h2 id="current-folder-title" class="text-2xl font-bold text-gray-900 mb-6 hidden">Projeto Alpha</h2>
+
+            <!-- Quick Task Creation (Estilo Keep) -->
+            <div class="w-full max-w-xl mx-auto mb-8 task-card-style p-4 border border-gray-200">
+                <input type="text" placeholder="Criar nova tarefa... (Ex: Implementar CRUD de Tasks)" class="w-full text-lg font-medium text-gray-800 placeholder-gray-400 focus:outline-none bg-transparent" />
+                <div class="mt-3 flex justify-end space-x-2">
+                    <!-- Simulação de Ações Rápidas -->
+                    <button class="text-gray-400 hover:text-primary-600 p-1 rounded-full" title="Adicionar Tag">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5.99c.55 0 1 .45 1 1v5.99c0 .55-.45 1-1 1H7.01c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1zM17 17h.01M17 13h5.99c.55 0 1 .45 1 1v5.99c0 .55-.45 1-1 1H17.01c-.55 0-1-.45-1-1v-5.99c0-.55.45-1 1-1zM7 17h.01M7 13h5.99c.55 0 1 .45 1 1v5.99c0 .55-.45 1-1 1H7.01c-.55 0-1-.45-1-1v-5.99c0-.55.45-1 1-1z"></path></svg>
+                    </button>
+                    <button class="bg-primary-600 text-white py-1 px-3 rounded-lg hover:bg-primary-700 transition duration-150 text-sm font-medium shadow-md">Salvar</button>
+                </div>
+            </div>
+
+            <!-- Filtro de Tags -->
+            <div class="flex flex-wrap items-center gap-2 mb-6 w-full max-w-xl mx-auto lg:max-w-none lg:mx-0">
+                <span class="text-sm font-medium text-gray-600">Filtro Rápido:</span>
+                <button class="tag-chip bg-primary-100 text-primary-600 text-xs font-semibold px-3 py-1 rounded-full hover:bg-primary-200 transition duration-150">#Backend</button>
+                <button class="tag-chip bg-yellow-100 text-yellow-600 text-xs font-semibold px-3 py-1 rounded-full hover:bg-yellow-200 transition duration-150">#Urgente</button>
+                <button class="tag-chip bg-gray-100 text-gray-600 text-xs font-semibold px-3 py-1 rounded-full hover:bg-gray-200 transition duration-150">#Documentação</button>
+            </div>
+
+            <!-- Lista de Tarefas (Grid de Cards) -->
+            <div class="flex-1 overflow-y-auto pr-2 grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-min">
+
+                <!-- Tarefa 1: Pendente e Urgente -->
+                <div class="task-card-style p-4 border border-yellow-300 cursor-pointer" onclick="showTaskDetails('task-b')">
+                    <p class="text-lg font-bold text-gray-800 mb-2">Criar interface de gerenciamento de membros</p>
+                    <div class="flex items-center space-x-2 text-sm text-gray-500 mb-3">
+                        <input type="checkbox" class="form-checkbox h-4 w-4 text-gray-400 rounded border-gray-300 focus:ring-primary-500 transition duration-150">
+                        <span>0/5 Microtarefas</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1 mt-auto">
+                        <span class="tag-chip bg-yellow-100 text-yellow-600 text-xs font-semibold px-2 py-0.5 rounded-full">#Urgente</span>
+                        <span class="tag-chip bg-indigo-100 text-indigo-600 text-xs font-semibold px-2 py-0.5 rounded-full">#Frontend</span>
+                    </div>
+                </div>
+
+                <!-- Tarefa 2: Concluída -->
+                <div class="task-card-style p-4 border border-green-300 cursor-pointer" onclick="showTaskDetails('task-a')">
+                    <p class="text-lg font-bold text-gray-800 line-through mb-2">Implementar Autenticação JWT na API</p>
+                    <div class="flex items-center space-x-2 text-sm text-gray-500 mb-3">
+                        <input type="checkbox" checked class="form-checkbox h-4 w-4 text-green-500 rounded border-gray-300 focus:ring-green-500 transition duration-150">
+                        <span>3/3 Microtarefas</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1 mt-auto">
+                         <span class="tag-chip bg-primary-100 text-primary-600 text-xs font-semibold px-2 py-0.5 rounded-full">#Backend</span>
+                    </div>
+                </div>
+
+                <!-- Tarefa 3: Pendente -->
+                <div class="task-card-style p-4 border border-gray-300 cursor-pointer" onclick="showTaskDetails('task-c')">
+                    <p class="text-lg font-bold text-gray-800 mb-2">Escrever a documentação de Swagger para Tags</p>
+                    <div class="flex items-center space-x-2 text-sm text-gray-500 mb-3">
+                        <input type="checkbox" class="form-checkbox h-4 w-4 text-gray-400 rounded border-gray-300 focus:ring-primary-500 transition duration-150">
+                        <span>1/2 Microtarefas</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1 mt-auto">
+                        <span class="tag-chip bg-gray-100 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-full">#Documentação</span>
+                    </div>
+                </div>
+
+                <!-- Tarefa 4: Outra Tarefa -->
+                <div class="task-card-style p-4 border border-gray-300 cursor-pointer" onclick="showTaskDetails('task-d')">
+                    <p class="text-lg font-bold text-gray-800 mb-2">Configurar roteamento do Vue Router</p>
+                    <div class="flex items-center space-x-2 text-sm text-gray-500 mb-3">
+                        <input type="checkbox" class="form-checkbox h-4 w-4 text-gray-400 rounded border-gray-300 focus:ring-primary-500 transition duration-150">
+                        <span>0/1 Microtarefas</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1 mt-auto">
+                        <span class="tag-chip bg-indigo-100 text-indigo-600 text-xs font-semibold px-2 py-0.5 rounded-full">#Frontend</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 3. Painel de Detalhes da Tarefa (Modal de Tela Cheia - Keep Style) -->
+    <div id="detail-modal" class="modal-overlay panel-hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-6 lg:p-8 w-11/12 max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+
+            <div class="flex-shrink-0 flex items-center justify-between border-b pb-4 mb-4">
+                <h2 class="text-xl font-bold text-gray-900">Detalhes da Tarefa</h2>
+                <button class="text-gray-500 hover:text-gray-800 p-1 rounded-full transition duration-150" aria-label="Fechar Detalhes" onclick="closeTaskDetails()">
+                    <!-- Ícone de Fechar -->
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Conteúdo do Modal Scrollável -->
+            <div class="flex-1 overflow-y-auto space-y-6 pr-2">
+                <div class="space-y-2">
+                    <h3 class="text-3xl font-extrabold text-gray-800">Criar interface de gerenciamento de membros da Pasta</h3>
+                    <p class="text-sm text-gray-500 flex items-center space-x-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                        <span>Em: Projeto Alpha</span>
+                    </p>
+                    <div class="flex flex-wrap gap-2 pt-2">
+                        <span class="tag-chip bg-yellow-100 text-yellow-600 text-sm font-semibold px-3 py-1 rounded-full">#Urgente</span>
+                        <span class="tag-chip bg-indigo-100 text-indigo-600 text-sm font-semibold px-3 py-1 rounded-full">#Frontend</span>
+                    </div>
+                </div>
+
+                <!-- Microtarefas (Subtasks) -->
+                <div>
+                    <h4 class="text-xl font-semibold text-gray-700 mb-3">Microtarefas (0/5)</h4>
+                    <div class="space-y-3">
+                        <!-- Nova Microtarefa Input -->
+                        <div class="flex space-x-2">
+                            <input type="text" placeholder="Adicionar nova microtarefa..." class="flex-grow p-2 border border-gray-300 rounded-xl text-sm focus:ring-primary-500 focus:border-primary-500" />
+                            <button class="bg-primary-500 text-white p-2 rounded-xl hover:bg-primary-600 transition duration-150 text-sm font-medium">Add</button>
+                        </div>
+                        <!-- Microtarefa 1 (Simulação) -->
+                        <div class="flex items-center space-x-2 p-2 bg-white rounded-lg border border-gray-200">
+                             <input type="checkbox" class="form-checkbox h-4 w-4 text-gray-400 rounded border-gray-300 focus:ring-primary-500 transition duration-150">
+                             <span class="text-base text-gray-700 flex-1">Esboçar layout no Figma</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gestão de Tags -->
+                 <div>
+                    <h4 class="text-xl font-semibold text-gray-700 mb-3">Tags (Gerenciamento)</h4>
+                    <div class="flex flex-wrap gap-2">
+                         <span class="tag-chip bg-primary-600 text-white text-sm font-semibold px-3 py-1 rounded-full flex items-center space-x-1 cursor-pointer">
+                            <span>#Backend</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </span>
+                        <span class="tag-chip bg-yellow-600 text-white text-sm font-semibold px-3 py-1 rounded-full flex items-center space-x-1 cursor-pointer">
+                            <span>#Urgente</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </span>
+                        <button class="bg-gray-200 text-gray-700 text-sm font-semibold px-3 py-1 rounded-full hover:bg-gray-300 transition duration-150 flex items-center space-x-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            <span>Adicionar Tag</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Membros da Pasta -->
+                <div>
+                    <h4 class="text-xl font-semibold text-gray-700 mb-3">Membros da Pasta (Propriedade)</h4>
+                    <p class="text-sm text-gray-500 mb-3">Todos os membros podem visualizar e manipular as tarefas.</p>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-10 h-10 rounded-full bg-primary-200 flex items-center justify-center text-primary-600 font-medium text-sm border-2 border-primary-500" title="João Silva (Owner)">JS</div>
+                         <div class="w-10 h-10 rounded-full bg-red-200 flex items-center justify-center text-red-600 font-medium text-sm" title="Maria Souza">MS</div>
+                         <button class="w-10 h-10 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition duration-150" title="Gerenciar Membros">
+                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20h18"></path></svg>
+                         </button>
+                    </div>
+                </div>
+            </div>
+
+             <!-- Ações Fixas (Rodapé do Modal) -->
+             <div class="flex-shrink-0 mt-6 pt-4 border-t border-gray-200 flex justify-end space-x-3">
+                <button class="text-gray-500 hover:text-red-500 p-2 rounded-xl transition duration-150 font-medium flex items-center space-x-1">
+                     <!-- Ícone de Lixeira -->
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    <span>Excluir</span>
+                </button>
+                <button class="flex items-center space-x-1 bg-green-500 text-white py-2 px-4 rounded-xl hover:bg-green-600 transition duration-150 font-medium shadow-md" onclick="closeTaskDetails()">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <span>Concluir e Fechar</span>
+                </button>
+             </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -12,18 +12,30 @@
 <script lang="ts" setup>
 import { useTasksStore } from '@/stores/tasks'
 import TasksDashboard from './TasksDashboard.vue'
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
 import { useFoldersStore } from '@/stores/folders'
 
 const tasksStore = useTasksStore()
 const foldersStore = useFoldersStore()
 
-onMounted(() => {
+onMounted(async () => {
+  // Busca as pastas do usuário ao montar
+  await foldersStore.fetchFolders()
   // Busca tarefas da pasta ativa ao montar
   if (foldersStore.activeFolderId) {
+
     tasksStore.fetchTasks(foldersStore.activeFolderId)
   }
 })
+
+watch(
+  () => foldersStore.activeFolderId,
+  (newId, oldId) => {
+    if (newId) {
+      tasksStore.fetchTasks(newId)
+    }
+  }
+)
 
 function handleAddTask(title: string) {
   if (foldersStore.activeFolderId) {
@@ -43,4 +55,3 @@ function handleRenameTask({ id, title }: { id: number; title: string }) {
   }
 }
 </script>
-

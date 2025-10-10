@@ -2,7 +2,7 @@
   <div class="min-h-full">
     <Disclosure
       as="nav"
-      class="bg-gray-800 dark:bg-gray-800/50"
+      class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white transition-colors duration-300"
       v-slot="{ open }"
       v-if="autenticacaoStore.autenticado"
     >
@@ -10,37 +10,26 @@
         <div class="flex h-16 items-center justify-between">
           <div class="flex items-center">
             <div class="shrink-0">
-              <img class="size-8" src="../public/icon.svg" alt="Logo" />
-            </div>
-            <div class="hidden md:block">
-              <div class="ml-10 flex items-baseline space-x-4">
-                <a
-                  v-for="item in navigation"
-                  :key="item.name"
-                  :href="item.href"
-                  :class="[
-                    item.current
-                      ? 'bg-gray-900 text-white dark:bg-gray-950/50'
-                      : 'text-gray-300 hover:bg-white/5 hover:text-white',
-                    'rounded-md px-3 py-2 text-sm font-medium',
-                  ]"
-                  :aria-current="item.current ? 'page' : undefined"
-                  >{{ item.name }}</a
-                >
+              <div class="size-12">
+                <svg viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M760.685714 936.228571H263.314286c-102.4 0-182.857143-80.457143-182.857143-182.857142V292.571429c0-102.4 80.457143-182.857143 182.857143-182.857143h504.685714C870.4 109.714286 950.857143 190.171429 950.857143 292.571429v460.8c-7.314286 95.085714-87.771429 182.857143-190.171429 182.857142zM263.314286 160.914286c-73.142857 0-131.657143 58.514286-131.657143 131.657143v460.8c0 73.142857 58.514286 131.657143 131.657143 131.657142h504.685714c73.142857 0 131.657143-58.514286 131.657143-131.657142V292.571429c0-73.142857-58.514286-131.657143-131.657143-131.657143H263.314286z" fill="#6366F1"/>
+                  <path d="M731.428571 256V190.171429c0-73.142857-43.885714-131.657143-102.4-131.657143H387.657143c-58.514286 0-102.4 58.514286-102.4 131.657143V256H731.428571z" fill="#A5B4FC"/>
+                  <path d="M731.428571 285.257143H263.314286v-21.942857-73.142857c0-87.771429 58.514286-160.914286 131.657143-160.914286h241.371428c73.142857 0 131.657143 73.142857 131.657143 160.914286v87.771428l-36.571429 7.314286z m-416.914285-58.514286h402.285714v-36.571428c0-58.514286-36.571429-102.4-80.457143-102.4H387.657143c-43.885714 0-80.457143 43.885714-80.457143 102.4v36.571428z" fill="#6366F1"/>
+                  <path d="M833.828571 285.257143H190.171429c-14.628571 0-29.257143-14.628571-29.257143-29.257143s14.628571-29.257143 29.257143-29.257143h643.657142c14.628571 0 29.257143 14.628571 29.257143 29.257143s-14.628571 29.257143-29.257143 29.257143z" fill="#6366F1"/>
+                  <path d="M378.88 546.157714l158.208 118.125715-30.573714 40.96L348.16 587.190857z" fill="#818CF8"/>
+                  <path d="M468.260571 674.304l261.851429-275.894857 37.083429 35.254857-261.851429 275.894857z" fill="#818CF8"/>
+                </svg>
               </div>
             </div>
-            <!-- Adiciona o menu de pastas -->
-            <div class="ml-6 relative">
+            <div class="ml-6 relative hidden md:block">
               <FolderMenu />
             </div>
           </div>
           <div class="hidden md:block">
             <div class="ml-4 flex items-center md:ml-6">
-              <!-- Removido o botão de notificações -->
               <Menu as="div" class="relative ml-3">
                 <MenuButton
-                  class="relative flex max-w-xs items-center rounded-full hover:text-white focus:outline-2 text-gray-400
-                   focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                  class="relative flex max-w-xs items-center rounded-full hover:text-white focus:outline-2 text-gray-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
                 >
                   <span class="absolute -inset-1.5" />
                   <span class="sr-only">Abrir menu do usuário</span>
@@ -84,7 +73,11 @@
             </div>
           </div>
           <div class="-mr-2 flex md:hidden">
-            <!-- Mobile menu button -->
+            <FolderListItem
+              v-if="foldersStore.activeFolder"
+              :folder="foldersStore.activeFolder"
+              :active="true"
+            />
             <DisclosureButton
               class="relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-white/5 hover:text-white focus:outline-2 focus:outline-offset-2 focus:outline-indigo-500"
             >
@@ -116,13 +109,12 @@
         <div class="border-t border-white/10 pt-4 pb-3">
           <div class="flex items-center px-5">
             <div class="shrink-0">
-              <UserCircleIcon class="size-10 text-gray-100 " />
+              <UserCircleIcon class="size-10 text-gray-100" />
             </div>
             <div class="ml-3">
               <div class="text-base/5 font-medium text-white">{{ user.name }}</div>
               <div class="text-sm font-medium text-gray-400">{{ user.email }}</div>
             </div>
-            <!-- Removido o botão de notificações -->
           </div>
           <div class="mt-3 space-y-1 px-2">
             <DisclosureButton
@@ -137,14 +129,7 @@
         </div>
       </DisclosurePanel>
     </Disclosure>
-    <header
-      v-if="autenticacaoStore.autenticado"
-      class="relative bg-white shadow-sm dark:bg-gray-800 dark:shadow-none dark:after:pointer-events-none dark:after:absolute dark:after:inset-x-0 dark:after:inset-y-0 dark:after:border-y dark:after:border-white/10"
-    >
-      <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Tarefas</h1>
-      </div>
-    </header>
+
     <main>
       <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <RouterView />
@@ -154,6 +139,7 @@
 </template>
 
 <script lang="ts" setup>
+import FolderListItem from '@/components/FolderListItem.vue'
 import {
   Disclosure,
   DisclosureButton,
@@ -176,17 +162,14 @@ const router = useRouter()
 
 const user = computed(() => ({
   name: autenticacaoStore.usuario?.nomeUsuario || 'Usuário',
-  email: '',
-  imageUrl:
-    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
 }))
 
 const navigation = computed(() =>
-  foldersStore.folders.map(folder => ({
+  foldersStore.folders.map((folder) => ({
     name: folder.name,
     href: `/folders/${folder.id}`,
-    current: router.currentRoute.value.path === `/folders/${folder.id}`
-  }))
+    current: router.currentRoute.value.path === `/folders/${folder.id}`,
+  })),
 )
 
 const fazerLogout = () => {
@@ -199,6 +182,7 @@ const userNavigation = computed(() => [
   { name: 'Configurações', href: '#' },
   { name: 'Sair', action: fazerLogout },
   { name: 'Registrar novo usuário', href: '/register' },
+  {name : 'Login', href: '/login' },
 ])
 </script>
 

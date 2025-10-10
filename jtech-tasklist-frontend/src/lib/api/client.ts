@@ -51,4 +51,9 @@ export async function deleteTask(folderId: number, taskId: number): Promise<void
   await api.delete(`/folders/${folderId}/tasks/${taskId}`)
 }
 
+export async function updateFavorite(folderId: number, taskId: number): Promise<Task> {
+  const { data } = await api.patch(`/folders/${folderId}/tasks/${taskId}/favorite`)
+  return data
+}
+
 export default api
