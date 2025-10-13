@@ -27,11 +27,12 @@ public class UserService {
     @Autowired
     private TaskRepository taskRepository;
 
-    public UserDTO register(String name, String password) {
+    public UserDTO register(String userName, String password, String fullName) {
         try {
             UserEntity user = new UserEntity();
-            user.setUserName(name);
+            user.setUserName(userName);
             user.setPassword(passwordEncoder.encode(password));
+            user.setFullName(fullName);
             user = userRepository.save(user);
 
             // Criar pasta de exemplo
@@ -80,12 +81,10 @@ public class UserService {
     }
 
     public Optional<UserDTO> getProfile(Long id) {
-        //todo: carregr o perfil completo
         return userRepository.findById(id).map(UserDTO::of);
     }
 
     public Optional<UserDTO> findById(Long id) {
-        //todo: carregr apenas o dados basicos
         return userRepository.findById(id).map(UserDTO::of);
     }
 

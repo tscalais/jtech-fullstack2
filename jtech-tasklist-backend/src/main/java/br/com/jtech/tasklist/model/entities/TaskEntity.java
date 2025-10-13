@@ -8,7 +8,8 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity(name = "tasks")
+@Entity
+@Table(name = "task", schema = "tasklist")
 public class TaskEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,7 +18,7 @@ public class TaskEntity {
     @Column(nullable = false, length = 100)
     private String title;
 
-    @Column(length = 1000)
+    @Column(length = 150)
     private String description;
 
     @Column(name = "completed", nullable = false)
@@ -30,5 +31,7 @@ public class TaskEntity {
     @JoinColumn(name = "folder_id", nullable = false)
     private FolderEntity folder;
 
+     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<SubtaskEntity> subtasks ;
 
 }

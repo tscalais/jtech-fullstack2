@@ -30,9 +30,9 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        authService = new AuthService(userRepository);
-        authService.jwtTokenService = jwtTokenService;
-        authService.passwordEncoder = passwordEncoder;
+        //authService = new AuthService(userRepository);
+        //authService.jwtTokenService = jwtTokenService;
+        //authService.passwordEncoder = passwordEncoder;
     }
 
     @Test

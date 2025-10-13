@@ -12,7 +12,8 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity(name = "users")
+@Entity
+@Table(name = "app_user", schema = "tasklist")
 public class UserEntity {
 
     @Id
@@ -25,6 +26,9 @@ public class UserEntity {
 
     @Column(nullable = false)
     private String password;
+
+    @Column(nullable = false)
+    private String fullName;
 
     @Override
     public boolean equals(Object o) {

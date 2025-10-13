@@ -20,7 +20,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<UserDTO> register(@RequestBody UserRequest request) {
-        UserDTO userDTO = userService.register(request.getUserName(), request.getPassword());
+        UserDTO userDTO = userService.register(request.getUserName(), request.getPassword(), request.getFullName());
         return new ResponseEntity<>(userDTO, HttpStatus.CREATED);
     }
 
@@ -38,4 +38,18 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
+
+
+    @GetMapping("/me")
+    public ResponseEntity<UserDTO> getCurrentUser(@RequestHeader("Authorization") String authorizationHeader) {
+        UserDTO userDTO = authService.getCurrentUser(authorizationHeader);
+        return ResponseEntity.ok(userDTO);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@RequestBody AuthRequest user) {
+        authService.resetPassword(user.getUserName());
+        return ResponseEntity.ok().build();
+    }
+
 }

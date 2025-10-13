@@ -19,6 +19,7 @@ public class UserDTO {
     private String id;
     private String userName;
     private String password;
+    private String fullName;
 
     public static List<UserDTO> of(List<UserEntity> entities) {
         return entities.stream().map(UserDTO::of).toList();
@@ -29,6 +30,7 @@ public class UserDTO {
                 .id(UUID.fromString(getId()))
                 .userName(getUserName())
                 .password(getPassword())
+                .fullName(getFullName())
                 .build();
     }
 
@@ -37,6 +39,7 @@ public class UserDTO {
                 .id(entity.getId().toString())
                 .userName(entity.getUserName())
                 .password(entity.getPassword())
+                .fullName(entity.getFullName())
                 .build();
     }
 
@@ -45,6 +48,7 @@ public class UserDTO {
                 //.id(request.getId())
                 .userName(request.getUserName())
                 .password(request.getPassword())
+                .fullName(request.getFullName())
                 .build();
     }
 }

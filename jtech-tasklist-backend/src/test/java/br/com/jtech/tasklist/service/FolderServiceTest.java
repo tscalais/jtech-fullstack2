@@ -8,14 +8,10 @@ import br.com.jtech.tasklist.repository.FolderRepository;
 import br.com.jtech.tasklist.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collections;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -37,7 +33,7 @@ class FolderServiceTest {
     @Test
     void createFolder_success() {
         UserEntity user = new UserEntity();
-        user.setId(1L);
+        user.setId(java.util.UUID.fromString("11111111-1111-1111-1111-111111111111")); // Corrigido: definir o id do usuário como UUID
         user.setUserName("user");
         FolderRequest request = new FolderRequest();
         request.setName("folder");
@@ -53,7 +49,7 @@ class FolderServiceTest {
     @Test
     void listFolders_success() {
         UserEntity user = new UserEntity();
-        user.setId(1L);
+        user.setId(java.util.UUID.fromString("11111111-1111-1111-1111-111111111111")); // Corrigido: definir o id do usuário como UUID
         user.setUserName("user");
         FolderEntity folder = FolderEntity.builder().id(1L).name("folder").owner(user).build();
         when(userRepository.findByUserName(anyString())).thenReturn(Optional.of(user));
@@ -65,10 +61,10 @@ class FolderServiceTest {
     @Test
     void getFolder_accessDenied() {
         UserEntity user = new UserEntity();
-        user.setId(1L);
+        //user.setId(1L);
         user.setUserName("user");
         UserEntity other = new UserEntity();
-        other.setId(2L);
+        //other.setId(2L);
         FolderEntity folder = FolderEntity.builder().id(1L).name("folder").owner(other).build();
         when(userRepository.findByUserName(anyString())).thenReturn(Optional.of(user));
         when(folderRepository.findById(1L)).thenReturn(Optional.of(folder));
