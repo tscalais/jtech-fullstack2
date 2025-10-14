@@ -1,5 +1,6 @@
 package br.com.jtech.tasklist.dto;
 
+import br.com.jtech.tasklist.model.UserDTO;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
@@ -14,4 +15,5 @@ import lombok.*;
 public class AuthResponse {
 
     private String token;
+    private UserDTO user;
 }

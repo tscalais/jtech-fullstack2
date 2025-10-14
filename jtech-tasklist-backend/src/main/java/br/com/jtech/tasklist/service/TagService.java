@@ -1,9 +1,9 @@
 package br.com.jtech.tasklist.service;
 
-import br.com.jtech.tasklist.model.entities.TagEntity;
 import br.com.jtech.tasklist.model.entities.FolderEntity;
-import br.com.jtech.tasklist.repository.TagRepository;
+import br.com.jtech.tasklist.model.entities.TagEntity;
 import br.com.jtech.tasklist.repository.FolderRepository;
+import br.com.jtech.tasklist.repository.TagRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -1,4 +1,4 @@
-package br.com.jtech.tasklist.controller;
+package br.com.jtech.tasklist.dto;
 
 public class TaskStatusRequest {
     private boolean completed;

@@ -1,7 +1,11 @@
 package br.com.jtech.tasklist.model.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -31,7 +35,12 @@ public class TaskEntity {
     @JoinColumn(name = "folder_id", nullable = false)
     private FolderEntity folder;
 
-     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
-    private java.util.List<SubtaskEntity> subtasks ;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_task_id")
+    @JsonBackReference
+    private TaskEntity parentTask;
 
+    @OneToMany(mappedBy = "parentTask", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<TaskEntity> subtasks;
 }

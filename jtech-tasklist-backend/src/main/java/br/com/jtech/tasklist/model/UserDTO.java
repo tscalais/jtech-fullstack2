@@ -38,14 +38,12 @@ public class UserDTO {
         return UserDTO.builder()
                 .id(entity.getId().toString())
                 .userName(entity.getUserName())
-                .password(entity.getPassword())
                 .fullName(entity.getFullName())
                 .build();
     }
 
     public static UserDTO of(UserRequest request) {
         return UserDTO.builder()
-                //.id(request.getId())
                 .userName(request.getUserName())
                 .password(request.getPassword())
                 .fullName(request.getFullName())

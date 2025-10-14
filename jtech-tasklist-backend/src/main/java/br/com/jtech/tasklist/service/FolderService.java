@@ -87,7 +87,7 @@ public class FolderService {
         UserEntity owner = getAuthenticatedUser();
         FolderEntity folderEntity = getFolderEntity(folderId);
         if (!folderEntity.getOwner().getId().equals(owner.getId())) {
-            throw new RuntimeException("Access denied");
+            throw new br.com.jtech.tasklist.config.infra.exceptions.FolderAccessDeniedException("Access denied to folder " + folderId);
         }
     }
 

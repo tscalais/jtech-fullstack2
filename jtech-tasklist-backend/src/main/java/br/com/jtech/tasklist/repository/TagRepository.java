@@ -1,7 +1,7 @@
 package br.com.jtech.tasklist.repository;
 
-import br.com.jtech.tasklist.model.entities.TagEntity;
 import br.com.jtech.tasklist.model.entities.FolderEntity;
+import br.com.jtech.tasklist.model.entities.TagEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

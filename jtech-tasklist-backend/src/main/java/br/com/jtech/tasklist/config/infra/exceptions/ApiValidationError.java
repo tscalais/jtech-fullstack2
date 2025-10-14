@@ -12,9 +12,7 @@
  */
 package br.com.jtech.tasklist.config.infra.exceptions;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 
 /**
  * An implementation from {@link ApiSubError} to show errors by jakarta validation.

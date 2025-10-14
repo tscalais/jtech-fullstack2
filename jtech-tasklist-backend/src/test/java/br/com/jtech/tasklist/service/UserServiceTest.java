@@ -1,6 +1,7 @@
 package br.com.jtech.tasklist.service;
 
 import br.com.jtech.tasklist.config.infra.exceptions.UserAlreadyExistsException;
+import br.com.jtech.tasklist.dto.UserRequest;
 import br.com.jtech.tasklist.model.UserDTO;
 import br.com.jtech.tasklist.model.entities.UserEntity;
 import br.com.jtech.tasklist.repository.FolderRepository;
@@ -50,7 +51,8 @@ class UserServiceTest {
         when(userRepository.save(any(UserEntity.class))).thenReturn(user);
         when(folderRepository.save(any())).thenReturn(null);
         when(taskRepository.save(any())).thenReturn(null);
-        UserDTO dto = userService.register(name, password, "Full Name");
+        UserRequest request = new UserRequest(name, password, "Full Name");
+        UserDTO dto = userService.register(request, true);
         assertNotNull(dto);
         assertEquals(name, dto.getUserName());
     }
@@ -61,7 +63,8 @@ class UserServiceTest {
         String password = "pass";
         when(passwordEncoder.encode(password)).thenReturn("encoded");
         when(userRepository.save(any(UserEntity.class))).thenThrow(DataIntegrityViolationException.class);
-        assertThrows(UserAlreadyExistsException.class, () -> userService.register(name, password, "Full Name"));
+        UserRequest request = new UserRequest(name, password, "Full Name");
+        assertThrows(UserAlreadyExistsException.class, () -> userService.register(request, true));
     }
 
     @Test

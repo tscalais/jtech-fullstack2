@@ -35,6 +35,13 @@ public class TaskService {
         folderService.validateOwner(folderId);
         FolderEntity folder = folderService.getFolderEntity(folderId);
         task.setFolder(folder);
+        if (task.getParentTask() != null) {
+            TaskEntity parent = taskRepository.findById(task.getParentTask().getId())
+                    .orElseThrow(() -> new RuntimeException("Tarefa pai não encontrada"));
+            if (parent.getSubtasks() != null && parent.getSubtasks().size() >= 5) {
+                throw new RuntimeException("Uma tarefa pode ter no máximo 5 subtarefas.");
+            }
+        }
         return taskRepository.save(task);
     }
 
@@ -44,6 +51,15 @@ public class TaskService {
                 .orElseThrow(() -> new RuntimeException("Tarefa não encontrada"));
         if (!existing.getFolder().getId().equals(folderId)) {
             throw new RuntimeException("A tarefa não pertence a esta pasta");
+        }
+        // Validação: limitar a 5 subtarefas por tarefa ao alterar parentTask
+        if (task.getParentTask() != null && (existing.getParentTask() == null ||
+                !task.getParentTask().getId().equals(existing.getParentTask().getId()))) {
+            TaskEntity parent = taskRepository.findById(task.getParentTask().getId())
+                    .orElseThrow(() -> new RuntimeException("Tarefa pai não encontrada"));
+            if (parent.getSubtasks() != null && parent.getSubtasks().size() >= 5) {
+                throw new RuntimeException("Uma tarefa pode ter no máximo 5 subtarefas.");
+            }
         }
         task.setId(taskId);
         task.setFolder(existing.getFolder());
@@ -71,10 +87,35 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
-    public TaskDTO toggleFavorite(Long taskId) {
-        TaskEntity task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada"));
+    public List<TaskEntity> listSubtasks(Long folderId, Long taskId) {
+        folderService.validateOwner(folderId);
+        TaskEntity parent = getTask(folderId, taskId);
+        return parent.getSubtasks();
+    }
+
+    public TaskEntity createSubtask(Long folderId, Long taskId, TaskEntity subtask) {
+        folderService.validateOwner(folderId);
+        TaskEntity parent = getTask(folderId, taskId);
+        if (parent.getSubtasks() != null && parent.getSubtasks().size() >= 5) {
+            throw new RuntimeException("Uma tarefa pode ter no máximo 5 subtarefas.");
+        }
+        subtask.setParentTask(parent);
+        subtask.setFolder(parent.getFolder());
+        return taskRepository.save(subtask);
+    }
+
+    public TaskDTO toggleFavorite(Long folderId, Long taskId) {
+        folderService.validateOwner(folderId);
+        TaskEntity task = getTask(folderId, taskId);
         task.setFavorite(!task.isFavorite());
+        task = taskRepository.save(task);
+        return TaskDTO.of(task);
+    }
+
+    public TaskDTO toggleComplete(Long folderId, Long taskId) {
+        folderService.validateOwner(folderId);
+        TaskEntity task = getTask(folderId, taskId);
+        task.setCompleted(!task.isCompleted());
         task = taskRepository.save(task);
         return TaskDTO.of(task);
     }
