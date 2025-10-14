@@ -1,89 +1,147 @@
-import { useLocalStorage } from '@/composables/useLocalStorage'
-import api from '@/lib/api/client'
 import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import { login as apiLogin, register as apiRegister, validateToken as apiValidateToken, getCurrentUser, type AuthRequest, type AuthResponse, type UserRequest, type UserDTO } from '@/lib/api/client'
+import {
+  saveToken,
+  saveUser,
+  getToken,
+  getUser,
+  clearAuthData,
+  isTokenExpired
+} from '@/utils/storage'
 
-interface Usuario {
-  nomeUsuario: string
-  token?: string
-}
+export const useAuthStore = defineStore('auth', () => {
+  // ========== State ==========
+  const user = ref<UserDTO | null>(null)
+  const token = ref<string | null>(null)
+  const isLoading = ref(false)
+  const error = ref<string | null>(null)
 
-const usuarioArmazenado = useLocalStorage('auth-user', null as Usuario | null)
+  // ========== Getters ==========
+  const isAuthenticated = computed(() => {
+    return !!token.value && !!user.value && !isTokenExpired(token.value)
+  })
 
-export const useAutenticacaoStore = defineStore('autenticacao', {
-  state: () => ({
-    usuario: usuarioArmazenado,
-    loading: false,
-    erro: '',
-  }),
-  getters: {
-    autenticado: (state) => !!state.usuario && !!state.usuario.token,
-    token: (state) => state.usuario?.token || '',
-  },
-  actions: {
-    async entrar(nomeUsuario: string, senha: string) {
-      this.loading = true
-      try {
-        const response = await api.post('/auth/login', {
-          userName: nomeUsuario,
-          password: senha,
-        })
-        const token = response.data.token as string
-        this.usuario = { nomeUsuario, token }
-        localStorage.setItem('auth-user', JSON.stringify(this.usuario))
-        return true
-      } catch {
-        this.usuario = null
-        return false
-      } finally {
-        this.loading = false
-      }
-    },
-    async registrar(nomeUsuario: string, senha: string) {
-      this.loading = true
-      this.erro = ''
-      try {
-        await api.post('/auth/register', {
-          userName: nomeUsuario,
-          password: senha,
-        })
-        // Registro bem-sucedido, já faz login automático
-        return await this.entrar(nomeUsuario, senha)
-      } catch (err) {
-        this.usuario = null
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        this.erro = (err as any)?.response?.data?.message || 'Erro ao registrar.'
-        return false
-      } finally {
-        this.loading = false
-      }
-    },
-    sair() {
-      this.usuario = null
-      localStorage.removeItem('auth-user')
-    },
-    async validarToken(router?: any) {
-      if (!this.usuario || !this.usuario.token) {
-        this.sair()
-        if (router) router.push({ name: 'login' })
-        return false
-      }
-      this.loading = true
-      try {
-        await api.get('/auth/validate', {
-          headers: {
-            Authorization: `Bearer ${this.usuario.token}`,
-          },
-        })
-        return true
-      } catch (err: any) {
-        if (err?.response?.status !== 200) {
-          this.sair()
-          if (router) router.push({ name: 'login' })
-        }
-        return false
-      } finally {
-        this.loading = false
-      }
-    },
-  },
+  // ========== Actions ==========
+
+  /**
+   * Inicializa a store com dados do localStorage
+   */
+  function initialize() {
+    const storedToken = getToken()
+    const storedUser = getUser<UserDTO>()
+
+    if (storedToken && storedUser && !isTokenExpired(storedToken)) {
+      token.value = storedToken
+      user.value = storedUser
+    } else {
+      clearAuthData()
+      token.value = null
+      user.value = null
+    }
+  }
+
+  /**
+   * Faz login do usuário
+   */
+  async function login(data: AuthRequest): Promise<void> {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const response = await apiLogin(data)
+      token.value = response.token
+      saveToken(response.token)
+
+      // Opcional: buscar dados do usuário logado, se necessário
+      // user.value = ...
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao fazer login'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Registra um novo usuário
+   */
+  async function register(data: UserRequest): Promise<UserDTO> {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const userData = await apiRegister(data)
+      user.value = userData
+      saveUser(userData)
+      return userData
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao registrar usuário'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Valida o token de acesso
+   */
+  async function validate(): Promise<void> {
+    if (!token.value) return
+
+    try {
+      await apiValidateToken(token.value)
+    } catch (err: any) {
+      logout()
+    }
+  }
+
+  /**
+   * Busca o usuário atual autenticado
+   */
+  async function fetchCurrentUser() {
+    isLoading.value = true
+    error.value = null
+    try {
+      const userData = await getCurrentUser(token.value!)
+      user.value = userData
+      saveUser(userData)
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao buscar usuário'
+      user.value = null
+      clearAuthData()
+      token.value = null
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Faz logout do usuário
+   */
+  function logout(): void {
+    clearAuthData()
+    token.value = null
+    user.value = null
+  }
+
+  return {
+    // State
+    user,
+    token,
+    isLoading,
+    error,
+
+    // Getters
+    isAuthenticated,
+
+    // Actions
+    initialize,
+    login,
+    register,
+    validate,
+    fetchCurrentUser,
+    logout
+  }
 })

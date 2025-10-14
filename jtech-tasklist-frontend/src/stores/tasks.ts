@@ -1,112 +1,163 @@
 import { defineStore } from 'pinia'
-import type { Task } from '@/types'
-import {
-  listTasks,
-  getTask,
-  createTask,
-  updateTask,
-  deleteTask,
-  updateFavorite,
-} from '@/lib/api/client'
+import { ref, computed } from 'vue'
+import { listTasks, getTask, createTask as apiCreateTask, updateTask as apiUpdateTask, deleteTask as apiDeleteTask, updateFavorite, updateTaskStatus } from '@/lib/api/client'
+import { useFoldersStore } from './folders'
+import type { TaskEntity } from '@/types/task'
 
-export const useTasksStore = defineStore('tasks', {
-  state: () => ({
-    tasks: [] as Task[],
-    activeTaskId: 0 as number,
-    loading: false as boolean,
-    error: '' as string,
-  }),
-  actions: {
-    async fetchTasks(folderId: number) {
-      this.loading = true
-      this.error = ''
-      try {
-        debugger
-        console.log('folderId',folderId)
-        const data = await listTasks(folderId)
-        this.tasks = data
-        this.activeTaskId = data.length > 0 ? data[0].id : 0
-      } catch (e: any) {
-        this.error = e.message || 'Erro ao carregar tarefas'
-      } finally {
-        this.loading = false
+export const useTasksStore = defineStore('tasks', () => {
+  // ========== State ==========
+  const tasks = ref<TaskEntity[]>([])
+  const isLoading = ref(false)
+  const error = ref<string | null>(null)
+
+  // ========== Getters ==========
+  const foldersStore = useFoldersStore()
+  const tasksForCurrentFolder = computed(() => {
+    return foldersStore.currentFolderId ? tasks.value.filter(t => t.folder.id === foldersStore.currentFolderId) : []
+  })
+  const completedTasks = computed(() => tasks.value.filter(t => t.completed))
+  const pendingTasks = computed(() => tasks.value.filter(t => !t.completed))
+  const totalTasks = computed(() => tasks.value.length)
+  const taskById = computed(() => (id: number) => tasks.value.find(t => t.id === id))
+
+  // ========== Actions ==========
+  async function fetchTasks(folderId: number): Promise<void> {
+    isLoading.value = true
+    error.value = null
+    try {
+      const data = await listTasks(folderId)
+      // Remove tarefas antigas dessa pasta e adiciona as novas
+      tasks.value = tasks.value.filter(t => t.folder.id !== folderId)
+      tasks.value.push(...data)
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao buscar tarefas'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function fetchTaskById(folderId: number, taskId: number): Promise<TaskEntity> {
+    isLoading.value = true
+    error.value = null
+    try {
+      const data = await getTask(folderId, taskId)
+      const index = tasks.value.findIndex(t => t.id === taskId)
+      if (index !== -1) {
+        tasks.value[index] = data
+      } else {
+        tasks.value.push(data)
       }
-    },
-    async createTask(folderId: number, task: Partial<Task>) {
-      this.loading = true
-      this.error = ''
-      try {
-        const newTask = await createTask(folderId, task)
-        this.tasks.push(newTask)
-        this.activeTaskId = newTask.id
-        return newTask
-      } catch (e: any) {
-        this.error = e.message || 'Erro ao criar tarefa'
-        throw e
-      } finally {
-        this.loading = false
+      return data
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao buscar tarefa'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function createTask(folderId: number, task: Partial<TaskEntity>): Promise<TaskEntity> {
+    isLoading.value = true
+    error.value = null
+    try {
+      const newTask = await apiCreateTask(folderId, task)
+      tasks.value.push(newTask)
+      return newTask
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao criar tarefa'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function updateTask(folderId: number, taskId: number, task: Partial<TaskEntity>): Promise<TaskEntity> {
+    isLoading.value = true
+    error.value = null
+    try {
+      const updatedTask = await apiUpdateTask(folderId, taskId, task)
+      const index = tasks.value.findIndex(t => t.id === taskId)
+      if (index !== -1) {
+        tasks.value[index] = updatedTask
       }
-    },
-    async updateTask(folderId: number, taskId: number, task: Partial<Task>) {
-      this.loading = true
-      this.error = ''
-      try {
-        const updated = await updateTask(folderId, taskId, task)
-        const idx = this.tasks.findIndex(t => t.id === taskId)
-        if (idx !== -1) this.tasks[idx] = updated
-        return updated
-      } catch (e: any) {
-        this.error = e.message || 'Erro ao atualizar tarefa'
-        throw e
-      } finally {
-        this.loading = false
+      return updatedTask
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao atualizar tarefa'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function deleteTask(folderId: number, taskId: number): Promise<void> {
+    isLoading.value = true
+    error.value = null
+    try {
+      await apiDeleteTask(folderId, taskId)
+      const index = tasks.value.findIndex(t => t.id === taskId)
+      if (index !== -1) {
+        tasks.value.splice(index, 1)
       }
-    },
-    async deleteTask(folderId: number, taskId: number) {
-      this.loading = true
-      this.error = ''
-      try {
-        await deleteTask(folderId, taskId)
-        this.tasks = this.tasks.filter(t => t.id !== taskId)
-        if (this.activeTaskId === taskId) {
-          this.activeTaskId = this.tasks.length > 0 ? this.tasks[0].id : 0
-        }
-      } catch (e: any) {
-        this.error = e.message || 'Erro ao excluir tarefa'
-        throw e
-      } finally {
-        this.loading = false
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao deletar tarefa'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function toggleFavorite(folderId: number, taskId: number): Promise<TaskEntity> {
+    isLoading.value = true
+    error.value = null
+    try {
+      const updatedTask = await updateFavorite(folderId, taskId)
+      const index = tasks.value.findIndex(t => t.id === taskId)
+      if (index !== -1) {
+        tasks.value[index] = updatedTask
       }
-    },
-    async getTask(folderId: number, taskId: number) {
-      this.loading = true
-      this.error = ''
-      try {
-        return await getTask(folderId, taskId)
-      } catch (e: any) {
-        this.error = e.message || 'Erro ao buscar tarefa'
-        throw e
-      } finally {
-        this.loading = false
+      return updatedTask
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao favoritar tarefa'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function setTaskStatus(folderId: number, taskId: number, completed: boolean): Promise<TaskEntity> {
+    isLoading.value = true
+    error.value = null
+    try {
+      const updatedTask = await updateTaskStatus(folderId, taskId, { completed })
+      const index = tasks.value.findIndex(t => t.id === taskId)
+      if (index !== -1) {
+        tasks.value[index] = updatedTask
       }
-    },
-    setActiveTask(id: number) {
-      this.activeTaskId = id
-    },
-    async toggleFavorite(folderId: number, taskId: number) {
-      this.loading = true
-      this.error = ''
-      try {
-        const updated = await updateFavorite(folderId, taskId)
-        const idx = this.tasks.findIndex(t => t.id === taskId)
-        if (idx !== -1) this.tasks[idx] = updated
-        return updated
-      } catch (e: any) {
-        this.error = e.message || 'Erro ao atualizar favorito'
-        throw e
-      } finally {
-        this.loading = false
-      }
-    },
-  },
+      return updatedTask
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao atualizar status da tarefa'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  return {
+    tasks,
+    isLoading,
+    error,
+    tasksForCurrentFolder,
+    completedTasks,
+    pendingTasks,
+    totalTasks,
+    taskById,
+    fetchTasks,
+    fetchTaskById,
+    createTask,
+    updateTask,
+    deleteTask,
+    toggleFavorite,
+    setTaskStatus
+  }
 })

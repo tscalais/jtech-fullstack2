@@ -1,13 +1,58 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="h-full bg-white dark:bg-gray-900">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <link rel="icon" href="/favicon.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerenciador de tarefas</title>
+
+  <!-- SEO -->
+  <title>TaskList - Gerenciador de Tarefas</title>
+  <meta name="description" content="Gerencie suas tarefas e projetos de forma simples e eficiente">
+  <meta name="keywords" content="tarefas, projetos, gerenciamento, produtividade">
+  <meta name="author" content="TaskList">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://tasklist.app/">
+  <meta property="og:title" content="TaskList - Gerenciador de Tarefas">
+  <meta property="og:description" content="Gerencie suas tarefas e projetos de forma simples e eficiente">
+  <meta property="og:image" content="/og-image.png">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://tasklist.app/">
+  <meta property="twitter:title" content="TaskList - Gerenciador de Tarefas">
+  <meta property="twitter:description" content="Gerencie suas tarefas e projetos de forma simples e eficiente">
+  <meta property="twitter:image" content="/twitter-image.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/vite.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.svg">
+
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#6366f1">
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Preload fonts (se usar Google Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="h-full">
+<body>
+  <!-- Fallback para browsers sem JS -->
+  <noscript>
+    <strong>
+      Desculpe, mas o TaskList precisa de JavaScript habilitado para funcionar corretamente.
+    </strong>
+  </noscript>
+
+  <!-- App Container -->
   <div id="app"></div>
+
+  <!-- Script do Vite -->
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

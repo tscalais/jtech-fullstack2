@@ -10,9 +10,9 @@ import {
   EyeIcon,
   EyeSlashIcon,
   CheckCircleIcon,
-  ExclamationCircleIcon,
-  XMarkIcon,
 } from '@heroicons/vue/24/outline'
+
+import { toast } from 'vue3-toastify'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -186,13 +186,16 @@ const handleSubmit = async () => {
     router.push('/dashboard')
   } catch (err) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    error.value = err?.response?.data?.message || 'Erro ao criar conta. Tente novamente.'
+    const errorMsg = err?.response?.data?.message || 'Erro ao criar conta. Tente novamente mais tarde.'
+    toast.error(errorMsg)
+    error.value = errorMsg
 
     // Se for erro de userName já existente
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (err?.response?.status === 409) {
       error.value = 'Este nome de usuário já está cadastrado'
       validations.userName = { valid: false, message: 'Nome de usuário já cadastrado' }
+      toast.error('Este nome de usuário já está cadastrado')
     }
   } finally {
     isLoading.value = false
@@ -231,25 +234,6 @@ const goToLogin = () => {
 
       <!-- Card Principal -->
       <div class="bg-white rounded-2xl shadow-xl p-8 space-y-6 dark:bg-white/5 dark:shadow-none">
-        <!-- Erro Geral -->
-        <Transition name="slide-down">
-          <div
-            v-if="error"
-            class="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start space-x-3 dark:bg-red-900/20 dark:border-red-700"
-          >
-            <ExclamationCircleIcon class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5 dark:text-red-400" />
-            <div class="flex-1">
-              <p class="text-sm text-red-800 dark:text-red-200">{{ error }}</p>
-            </div>
-            <button
-              @click="error = null"
-              class="text-red-400 hover:text-red-600 dark:text-red-300 dark:hover:text-red-500"
-            >
-              <XMarkIcon class="w-4 h-4" />
-            </button>
-          </div>
-        </Transition>
-
         <!-- Formulário -->
         <form @submit.prevent="handleSubmit" class="space-y-5">
           <!-- Nome Completo -->

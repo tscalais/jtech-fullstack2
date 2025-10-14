@@ -1,88 +1,250 @@
 import { defineStore } from 'pinia'
-import api from '@/lib/api/client'
+import { ref, computed } from 'vue'
+import {
+  listFolders,
+  getFolder,
+  createFolder as apiCreateFolder,
+  updateFolder as apiUpdateFolder,
+  deleteFolder as apiDeleteFolder,
+} from '@/lib/api/client'
+import type { FolderResponse, FolderRequest } from '@/types/folder'
 
-export interface Folder {
-  id: number
-  name: string
-  ownerId?: string
-  ownerUsername?: string
-  createdAt?: string
-  updatedAt?: string
-}
+export const useFoldersStore = defineStore('folders', () => {
+  // ========== State ==========
+  const folders = ref<FolderResponse[]>([])
+  const currentFolderId = ref<number | null>(null)
+  const isLoading = ref(false)
+  const error = ref<string | null>(null)
 
-export const useFoldersStore = defineStore('folders', {
-  state: () => ({
-    folders: [] as Folder[],
-    loading: false,
-    error: '' as string | null,
-    activeFolderId: localStorage.getItem('active-folder-id') ? Number(localStorage.getItem('active-folder-id')) : null,
-  }),
-  actions: {
-    setActiveFolderId(id: number | null) {
-      this.activeFolderId = id
-      if (id !== null) {
-        localStorage.setItem('active-folder-id', String(id))
+  // ========== Getters ==========
+  const currentFolder = computed(() => folders.value.find((f) => f.id === currentFolderId.value))
+
+  const currentFolderName = computed(() => currentFolder.value?.name || 'Pasta')
+
+  const sortedFolders = computed(() =>
+    [...folders.value].sort((a, b) => a.name.localeCompare(b.name)),
+  )
+
+  const totalFolders = computed(() => folders.value.length)
+
+  // ========== Actions ==========
+
+  /**
+   * Busca todas as pastas do usuário
+   */
+  async function fetchFolders(): Promise<void> {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const data = await listFolders()
+      folders.value = data
+
+      // Define a primeira pasta como atual se não houver uma selecionada
+      if (!currentFolderId.value && folders.value.length > 0) {
+        currentFolderId.value = folders.value[0].id
+      }
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao buscar pastas'
+      console.error('Erro ao buscar pastas:', err)
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Busca uma pasta específica por ID
+   */
+  async function fetchFolderById(id: number): Promise<FolderResponse> {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const data = await getFolder(id)
+
+      // Atualiza ou adiciona a pasta na lista
+      const index = folders.value.findIndex((f) => f.id === id)
+      if (index !== -1) {
+        folders.value[index] = data
       } else {
-        localStorage.removeItem('active-folder-id')
+        folders.value.push(data)
       }
-    },
-    async fetchFolders() {
-      this.loading = true
-      this.error = ''
-      try {
-        const { data } = await api.get<Folder[]>('/folders')
-        this.folders = data
-        // Se não houver pastas ou a pasta ativa não existe mais, limpa a seleção
-        if (!this.folders.length || !this.folders.some(f => f.id === this.activeFolderId)) {
-          this.setActiveFolderId(null)
-        }
-      } catch (e: any) {
-        this.error = e?.response?.data?.message || 'Erro ao buscar pastas.'
-      } finally {
-        this.loading = false
+
+      return data
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao buscar pasta'
+      console.error('Erro ao buscar pasta:', err)
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Cria uma nova pasta
+   */
+  async function createFolder(data: FolderRequest): Promise<FolderResponse> {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const newFolder = await apiCreateFolder(data)
+      folders.value.push(newFolder)
+
+      // Define como pasta atual
+      currentFolderId.value = newFolder.id
+
+      return newFolder
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao criar pasta'
+      console.error('Erro ao criar pasta:', err)
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Atualiza uma pasta existente
+   */
+  async function updateFolder(id: number, data: FolderRequest): Promise<FolderResponse> {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const updatedFolder = await apiUpdateFolder(id, data)
+
+      // Atualiza a pasta na lista
+      const index = folders.value.findIndex((f) => f.id === id)
+      if (index !== -1) {
+        folders.value[index] = updatedFolder
       }
-    },
-    async createFolder(folder: { name: string }) {
-      this.loading = true
-      this.error = ''
-      try {
-        const { data } = await api.post<Folder>('/folders', folder)
-        this.folders.push(data)
-        return data
-      } catch (e: any) {
-        this.error = e?.response?.data?.message || 'Erro ao criar pasta.'
-        throw e
-      } finally {
-        this.loading = false
+
+      return updatedFolder
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao atualizar pasta'
+      console.error('Erro ao atualizar pasta:', err)
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Deleta uma pasta
+   */
+  async function deleteFolder(id: number): Promise<void> {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      await apiDeleteFolder(id)
+
+      // Remove a pasta da lista
+      const index = folders.value.findIndex((f) => f.id === id)
+      if (index !== -1) {
+        folders.value.splice(index, 1)
       }
-    },
-    async updateFolder(id: number, folder: { name: string }) {
-      this.loading = true
-      this.error = ''
-      try {
-        const { data } = await api.put<Folder>(`/folders/${id}`, folder)
-        const idx = this.folders.findIndex(f => f.id === id)
-        if (idx !== -1) this.folders[idx] = data
-        return data
-      } catch (e: any) {
-        this.error = e?.response?.data?.message || 'Erro ao atualizar pasta.'
-        throw e
-      } finally {
-        this.loading = false
+
+      // Se era a pasta atual, seleciona outra
+      if (currentFolderId.value === id) {
+        currentFolderId.value = folders.value.length > 0 ? folders.value[0].id : null
       }
-    },
-    async deleteFolder(id: number) {
-      this.loading = true
-      this.error = ''
-      try {
-        await api.delete(`/folders/${id}`)
-        this.folders = this.folders.filter(f => f.id !== id)
-      } catch (e: any) {
-        this.error = e?.response?.data?.message || 'Erro ao excluir pasta.'
-        throw e
-      } finally {
-        this.loading = false
-      }
-    },
-  },
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao deletar pasta'
+      console.error('Erro ao deletar pasta:', err)
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Define a pasta atual
+   */
+  function setCurrentFolder(folderId: number): void {
+    const folder = folders.value.find((f) => f.id === folderId)
+    if (folder) {
+      currentFolderId.value = folderId
+    } else {
+      console.warn(`Pasta com ID ${folderId} não encontrada`)
+    }
+  }
+
+  /**
+   * Incrementa a contagem de tarefas de uma pasta
+   */
+  function incrementTaskCount(folderId: number): void {
+    const folder = folders.value.find((f) => f.id === folderId)
+    if (folder) {
+      folder.count++
+    }
+  }
+
+  /**
+   * Decrementa a contagem de tarefas de uma pasta
+   */
+  function decrementTaskCount(folderId: number): void {
+    const folder = folders.value.find((f) => f.id === folderId)
+    if (folder && folder.count > 0) {
+      folder.count--
+    }
+  }
+
+  /**
+   * Atualiza a contagem de tarefas de uma pasta
+   */
+  function updateTaskCount(folderId: number, count: number): void {
+    const folder = folders.value.find((f) => f.id === folderId)
+    if (folder) {
+      folder.count = count
+    }
+  }
+
+  /**
+   * Limpa o erro da store
+   */
+  function clearError(): void {
+    error.value = null
+  }
+
+  /**
+   * Reseta a store para o estado inicial
+   */
+  function $reset(): void {
+    folders.value = []
+    currentFolderId.value = null
+    isLoading.value = false
+    error.value = null
+  }
+
+  // ========== Return ==========
+
+  return {
+    // State
+    folders,
+    currentFolderId,
+    isLoading,
+    error,
+
+    // Getters
+    currentFolder,
+    currentFolderName,
+    sortedFolders,
+    totalFolders,
+
+    // Actions
+    fetchFolders,
+    fetchFolderById,
+    createFolder,
+    updateFolder,
+    deleteFolder,
+    setCurrentFolder,
+    incrementTaskCount,
+    decrementTaskCount,
+    updateTaskCount,
+    clearError,
+    $reset,
+  }
 })

@@ -1,25 +1,5 @@
-export interface Folder {
-  id: number;
-  name: string;
-  ownerId?: string;
-  ownerUsername?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
+// Barrel export - centraliza todos os tipos alinhados à nova API
 
-export interface Task {
-  id: number;
-  title: string;
-  description: string;
-  completed: boolean;
-  favorite: boolean;
-  folder: Folder;
-}
-
-export interface Subtask {
-  id: number;
-  taskId: number;
-  name: string;
-  concluida: boolean;
-  createdAt: number;
-}
+export type { FolderResponse, FolderRequest, FolderEntity, UserEntity } from './folder'
+export type { TaskEntity, Subtask, TaskStatus, Tag, TagColor } from './task'
+export type { UserDTO, AuthRequest, AuthResponse, UserRequest } from './auth'

@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { resetPassword } from '@/lib/api/client'
 import type { AuthRequest } from '@/types/auth'
 import { ArrowLeftEndOnRectangleIcon, UserIcon, LockClosedIcon, EyeIcon, EyeSlashIcon, ExclamationTriangleIcon, ExclamationCircleIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { toast } from 'vue3-toastify'
 
 
 const router = useRouter()
@@ -25,7 +26,7 @@ const forgotPasswordLoading = ref(false)
 
 // ========== Computed ==========
 const isFormValid = computed(() => {
-  return form.value.userName.trim() !== '' && form.value.password.length >= 6
+  return form.value.userName.trim() !== '' && form.value.password.length >= 0
 })
 
 const redirectPath = computed(() => {
@@ -79,6 +80,7 @@ const handleSubmit = async () => {
     // Redireciona para a página desejada
     router.push(redirectPath.value)
   } catch (err: unknown) {
+    let msg = 'Usuário ou senha inválidos'
     if (
       typeof err === 'object' &&
       err &&
@@ -90,10 +92,10 @@ const handleSubmit = async () => {
       typeof err.response.data === 'object' &&
       'message' in err.response.data
     ) {
-      error.value = err.response.data.message as string
-    } else {
-      error.value = 'Usuário ou senha inválidos'
+      msg = err.response.data.message as string
     }
+    error.value = msg
+    toast.error(msg, { autoClose: 4000, position: 'top-right' })
   } finally {
     isLoading.value = false
   }
@@ -153,25 +155,6 @@ const goToForgotPassword = async () => {
             Sua sessão expirou. Por favor, faça login novamente.
           </p>
         </div>
-
-        <!-- Erro de Login -->
-        <Transition name="slide-down">
-          <div
-            v-if="error"
-            class="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start space-x-3 dark:bg-red-900/20 dark:border-red-700"
-          >
-            <ExclamationCircleIcon class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5 dark:text-red-400" />
-            <div class="flex-1">
-              <p class="text-sm text-red-800 dark:text-red-200">{{ error }}</p>
-            </div>
-            <button
-              @click="error = null"
-              class="text-red-400 hover:text-red-600 dark:text-red-300 dark:hover:text-red-500"
-            >
-              <XMarkIcon class="w-5 h-5"/>
-            </button>
-          </div>
-        </Transition>
 
         <!-- Formulário -->
         <form @submit.prevent="handleSubmit" class="space-y-5">
