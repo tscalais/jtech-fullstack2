@@ -13,6 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import br.com.jtech.tasklist.config.infra.exceptions.FolderAccessDeniedException;
+import br.com.jtech.tasklist.config.infra.exceptions.UserNotFoundException;
+import br.com.jtech.tasklist.config.infra.exceptions.FolderNotFoundException;
 
 @Service
 public class FolderService {
@@ -32,7 +35,7 @@ public class FolderService {
         } else {
             username = principal.toString();
         }
-        return userRepository.findByUserName(username).orElseThrow(() -> new RuntimeException("User not found"));
+        return userRepository.findByUserName(username).orElseThrow(UserNotFoundException::new);
     }
 
     public FolderResponse createFolder(FolderRequest request) {
@@ -52,9 +55,9 @@ public class FolderService {
 
     public FolderResponse getFolder(Long id) {
         UserEntity owner = getAuthenticatedUser();
-        FolderEntity folderEntity = folderRepository.findById(id).orElseThrow(() -> new RuntimeException("Folder not found"));
+        FolderEntity folderEntity = folderRepository.findById(id).orElseThrow(FolderNotFoundException::new);
         if (!folderEntity.getOwner().getId().toString().equals(owner.getId().toString())) {
-            throw new RuntimeException("Access denied");
+            throw new FolderAccessDeniedException();
         }
         return toResponse(folderEntity);
     }
@@ -62,9 +65,9 @@ public class FolderService {
     @Transactional
     public FolderResponse updateFolder(Long id, FolderRequest request) {
         UserEntity owner = getAuthenticatedUser();
-        FolderEntity folderEntity = folderRepository.findById(id).orElseThrow(() -> new RuntimeException("Folder not found"));
+        FolderEntity folderEntity = folderRepository.findById(id).orElseThrow(FolderNotFoundException::new);
         if (!folderEntity.getOwner().getId().toString().equals(owner.getId().toString())) {
-            throw new RuntimeException("Access denied");
+            throw new FolderAccessDeniedException();
         }
         folderEntity.setName(request.getName());
         return toResponse(folderEntity);
@@ -72,22 +75,22 @@ public class FolderService {
 
     public void deleteFolder(Long id) {
         UserEntity owner = getAuthenticatedUser();
-        FolderEntity folderEntity = folderRepository.findById(id).orElseThrow(() -> new RuntimeException("Folder not found"));
+        FolderEntity folderEntity = folderRepository.findById(id).orElseThrow(FolderNotFoundException::new);
         if (!folderEntity.getOwner().getId().toString().equals(owner.getId().toString())) {
-            throw new RuntimeException("Access denied");
+            throw new FolderAccessDeniedException();
         }
         folderRepository.delete(folderEntity);
     }
 
     public FolderEntity getFolderEntity(Long id) {
-        return folderRepository.findById(id).orElseThrow(() -> new RuntimeException("Folder not found"));
+        return folderRepository.findById(id).orElseThrow(FolderNotFoundException::new);
     }
 
     public void validateOwner(Long folderId) {
         UserEntity owner = getAuthenticatedUser();
         FolderEntity folderEntity = getFolderEntity(folderId);
         if (!folderEntity.getOwner().getId().equals(owner.getId())) {
-            throw new br.com.jtech.tasklist.config.infra.exceptions.FolderAccessDeniedException("Access denied to folder " + folderId);
+            throw new FolderAccessDeniedException();
         }
     }
 

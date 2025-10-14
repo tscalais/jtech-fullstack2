@@ -4,6 +4,8 @@ import br.com.jtech.tasklist.model.TaskDTO;
 import br.com.jtech.tasklist.model.entities.FolderEntity;
 import br.com.jtech.tasklist.model.entities.TaskEntity;
 import br.com.jtech.tasklist.repository.TaskRepository;
+import br.com.jtech.tasklist.config.infra.exceptions.TaskNotInFolderException;
+import br.com.jtech.tasklist.config.infra.exceptions.MaxSubtasksExceededException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,9 +26,9 @@ public class TaskService {
     public TaskEntity getTask(Long folderId, Long taskId) {
         folderService.validateOwner(folderId);
         TaskEntity task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada"));
+                .orElseThrow(TaskNotInFolderException::new);
         if (!task.getFolder().getId().equals(folderId)) {
-            throw new RuntimeException("A tarefa não pertence a esta pasta");
+            throw new TaskNotInFolderException();
         }
         return task;
     }
@@ -37,9 +39,9 @@ public class TaskService {
         task.setFolder(folder);
         if (task.getParentTask() != null) {
             TaskEntity parent = taskRepository.findById(task.getParentTask().getId())
-                    .orElseThrow(() -> new RuntimeException("Tarefa pai não encontrada"));
+                    .orElseThrow(TaskNotInFolderException::new);
             if (parent.getSubtasks() != null && parent.getSubtasks().size() >= 5) {
-                throw new RuntimeException("Uma tarefa pode ter no máximo 5 subtarefas.");
+                throw new MaxSubtasksExceededException();
             }
         }
         return taskRepository.save(task);
@@ -48,17 +50,17 @@ public class TaskService {
     public TaskEntity updateTask(Long folderId, Long taskId, TaskEntity task) {
         folderService.validateOwner(folderId);
         TaskEntity existing = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada"));
+                .orElseThrow(TaskNotInFolderException::new);
         if (!existing.getFolder().getId().equals(folderId)) {
-            throw new RuntimeException("A tarefa não pertence a esta pasta");
+            throw new TaskNotInFolderException();
         }
         // Validação: limitar a 5 subtarefas por tarefa ao alterar parentTask
         if (task.getParentTask() != null && (existing.getParentTask() == null ||
                 !task.getParentTask().getId().equals(existing.getParentTask().getId()))) {
             TaskEntity parent = taskRepository.findById(task.getParentTask().getId())
-                    .orElseThrow(() -> new RuntimeException("Tarefa pai não encontrada"));
+                    .orElseThrow(TaskNotInFolderException::new);
             if (parent.getSubtasks() != null && parent.getSubtasks().size() >= 5) {
-                throw new RuntimeException("Uma tarefa pode ter no máximo 5 subtarefas.");
+                throw new MaxSubtasksExceededException();
             }
         }
         task.setId(taskId);
@@ -69,9 +71,9 @@ public class TaskService {
     public void deleteTask(Long folderId, Long taskId) {
         folderService.validateOwner(folderId);
         TaskEntity task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada"));
+                .orElseThrow(TaskNotInFolderException::new);
         if (!task.getFolder().getId().equals(folderId)) {
-            throw new RuntimeException("A tarefa não pertence a esta pasta");
+            throw new TaskNotInFolderException();
         }
         taskRepository.deleteById(taskId);
     }
@@ -79,9 +81,9 @@ public class TaskService {
     public TaskEntity updateTaskStatus(Long folderId, Long taskId, boolean completed) {
         folderService.validateOwner(folderId);
         TaskEntity task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada"));
+                .orElseThrow(TaskNotInFolderException::new);
         if (!task.getFolder().getId().equals(folderId)) {
-            throw new RuntimeException("A tarefa não pertence a esta pasta");
+            throw new TaskNotInFolderException();
         }
         task.setCompleted(completed);
         return taskRepository.save(task);
@@ -97,7 +99,7 @@ public class TaskService {
         folderService.validateOwner(folderId);
         TaskEntity parent = getTask(folderId, taskId);
         if (parent.getSubtasks() != null && parent.getSubtasks().size() >= 5) {
-            throw new RuntimeException("Uma tarefa pode ter no máximo 5 subtarefas.");
+            throw new MaxSubtasksExceededException();
         }
         subtask.setParentTask(parent);
         subtask.setFolder(parent.getFolder());

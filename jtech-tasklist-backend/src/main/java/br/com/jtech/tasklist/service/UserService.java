@@ -46,7 +46,7 @@ public class UserService {
             return UserDTO.of(user);
 
         } catch (DataIntegrityViolationException e) {
-            throw new UserAlreadyExistsException("Usuário já existe.");
+            throw new UserAlreadyExistsException();
         }
     }
 

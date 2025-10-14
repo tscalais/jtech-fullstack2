@@ -50,10 +50,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * This method handles user already exists exception.
-     *
-     * @param ex Exception thrown.
-     * @return Return a {@link ApiError} with the error message.
+     * Trata a exceção de usuário já existe.
      */
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ApiError> handleUserAlreadyExists(UserAlreadyExistsException ex) {
@@ -65,10 +62,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * This method handles invalid credentials exception (login failure).
-     *
-     * @param ex Exception thrown.
-     * @return Return a {@link ApiError} with the error message and HTTP 401.
+     * Trata exceção de acesso negado à pasta.
      */
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ApiError> handleInvalidCredentials(InvalidCredentialsException ex) {
@@ -80,13 +74,34 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * This method handles user not found exception.
-     *
-     * @param ex Exception thrown.
-     * @return Return a {@link ApiError} with the error message and HTTP 404.
+     * Trata exceção de tarefa não pertence à pasta.
      */
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ApiError> handleUserNotFound(UserNotFoundException ex) {
+    @ExceptionHandler(TaskNotInFolderException.class)
+    public ResponseEntity<ApiError> handleTaskNotInFolder(TaskNotInFolderException ex) {
+        ApiError error = new ApiError(HttpStatus.BAD_REQUEST);
+        error.setMessage(ex.getMessage());
+        error.setTimestamp(LocalDateTime.now());
+        error.setDebugMessage(ex.getLocalizedMessage());
+        return buildResponseEntity(error);
+    }
+
+    /**
+     * Trata exceção de máximo de subtarefas excedido.
+     */
+    @ExceptionHandler(MaxSubtasksExceededException.class)
+    public ResponseEntity<ApiError> handleMaxSubtasksExceeded(MaxSubtasksExceededException ex) {
+        ApiError error = new ApiError(HttpStatus.BAD_REQUEST);
+        error.setMessage(ex.getMessage());
+        error.setTimestamp(LocalDateTime.now());
+        error.setDebugMessage(ex.getLocalizedMessage());
+        return buildResponseEntity(error);
+    }
+
+    /**
+     * Trata exceção de pasta não encontrada.
+     */
+    @ExceptionHandler(FolderNotFoundException.class)
+    public ResponseEntity<ApiError> handleFolderNotFound(FolderNotFoundException ex) {
         ApiError error = new ApiError(HttpStatus.NOT_FOUND);
         error.setMessage(ex.getMessage());
         error.setTimestamp(LocalDateTime.now());
@@ -95,18 +110,17 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * This method handles folder access denied exception.
-     *
-     * @param ex Exception thrown.
-     * @return Return a {@link ApiError} with the error message and HTTP 403.
+     * Trata exceção de usuário não encontrado.
      */
-    @ExceptionHandler(FolderAccessDeniedException.class)
-    public ResponseEntity<ApiError> handleFolderAccessDenied(FolderAccessDeniedException ex) {
-        ApiError error = new ApiError(HttpStatus.FORBIDDEN);
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiError> handleUserNotFoundCustom(UserNotFoundException ex) {
+        ApiError error = new ApiError(HttpStatus.NOT_FOUND);
         error.setMessage(ex.getMessage());
         error.setTimestamp(LocalDateTime.now());
-        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+        error.setDebugMessage(ex.getLocalizedMessage());
+        return buildResponseEntity(error);
     }
+
 
     /**
      * This method builds the response entity.
