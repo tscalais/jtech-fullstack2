@@ -12,7 +12,10 @@ import java.util.List;
 public class FolderDTO {
     private Long id;
     private String name;
-    private String description;
+    private String ownerId;
+    private String ownerUsername;
+    private String createdAt;
+    private String updatedAt;
     private List<TaskDTO> tasks;
 
     public static FolderDTO of(FolderEntity entity) {

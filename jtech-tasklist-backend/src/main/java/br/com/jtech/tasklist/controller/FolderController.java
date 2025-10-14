@@ -47,7 +47,6 @@ public class FolderController {
         return ResponseEntity.noContent().build();
     }
 
-    // --- TASK CRUD ENDPOINTS ---
     @GetMapping("/{folderId}/tasks")
     public ResponseEntity<List<TaskEntity>> listTasks(@PathVariable Long folderId) {
         return ResponseEntity.ok(taskService.listTasks(folderId));

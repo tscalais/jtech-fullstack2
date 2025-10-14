@@ -29,6 +29,4 @@ public class TaskController {
         TaskDTO updated = taskService.toggleFavorite(id);
         return ResponseEntity.ok(updated);
     }
-
-    // Outros endpoints podem ser adicionados aqui
 }
