@@ -1,66 +1,42 @@
-import { useLocalStorage } from '@/composables/useLocalStorage'
-import type { Subtask } from '@/types'
+
 import { defineStore } from 'pinia'
+import { ref } from 'vue'
+import { listSubtasks, createSubtask } from '@/lib/api/client'
+import type { TaskEntity } from '@/types/task'
 
-const getNextId = (items: Subtask[]): number => {
-  const ids = items.map((item) => item.id)
-  const maxId = ids.length > 0 ? Math.max(...ids) : 0
-  return maxId + 1
-}
+export const useSubtasksStore = defineStore('subtasks', () => {
+  const subtasks = ref<TaskEntity[]>([])
+  const isLoading = ref(false)
+  const error = ref<string | null>(null)
 
-type SubtasksPorTaskId = { [taskId: number]: Subtask[] }
-const subtasks: import('vue').Ref<SubtasksPorTaskId> = useLocalStorage('jtech-subtasks', {})
+  async function fetchSubtasks(folderId: number, taskId: number): Promise<void> {
+    isLoading.value = true
+    error.value = null
+    try {
+      const data = await listSubtasks(folderId, taskId)
+      subtasks.value = data
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao buscar subtarefas'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
 
-export const useSubtasksStore = defineStore('subtasks', {
-  state: () => ({
-    subtasks: subtasks.value,
-  }),
-  actions: {
-    adicionarSubtask(taskId: number, name: string) {
-      if (!this.subtasks[taskId]) {
-        this.subtasks[taskId] = []
-      }
-      const nameJaExiste = this.subtasks[taskId].some(
-        (subtask) => subtask.name.toLowerCase().trim() === name.toLowerCase().trim(),
-      )
-      if (nameJaExiste) {
-        throw new Error(`Já existe uma sub tarefa "${name}" nesta tarefa`)
-      }
-      const novaSubtask: Subtask = {
-        id: getNextId(this.subtasks[taskId]),
-        taskId: taskId,
-        name: name.trim(),
-        concluida: false,
-        createdAt: Date.now(),
-      }
-      this.subtasks[taskId].push(novaSubtask)
-    },
-    excluirSubtask(taskId: number, subtaskId: number) {
-      if (this.subtasks[taskId]) {
-        this.subtasks[taskId] = this.subtasks[taskId].filter((subtask) => subtask.id !== subtaskId)
-      }
-    },
-    alternarSubtask(taskId: number, subtaskId: number) {
-      const subtask = this.subtasks[taskId]?.find((subtask) => subtask.id === subtaskId)
-      if (subtask) {
-        subtask.concluida = !subtask.concluida
-      }
-      return subtask
-    },
-    editarSubtask(taskId: number, subtaskId: number, newName: string) {
-      const nameJaExiste = this.subtasks[taskId]?.some(
-        (subtask) => subtask.name.toLowerCase().trim() === newName.toLowerCase().trim() && subtask.id !== subtaskId,
-      )
-      if (nameJaExiste) {
-        throw new Error(`Já existe uma subtask com o título "${newName}" nesta tarefa`)
-      }
-      const subtask = this.subtasks[taskId]?.find((subtask) => subtask.id === subtaskId)
-      if (subtask) {
-        subtask.name = newName.trim()
-      }
-    },
-    excluirSubtasksPorTaskId(taskId: number) {
-      delete this.subtasks[taskId]
-    },
-  },
+  async function addSubtask(folderId: number, taskId: number, subtask: Partial<TaskEntity>): Promise<TaskEntity> {
+    isLoading.value = true
+    error.value = null
+    try {
+      const data = await createSubtask(folderId, taskId, subtask)
+      subtasks.value.push(data)
+      return data
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao criar subtarefa'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  return { subtasks, isLoading, error, fetchSubtasks, addSubtask }
 })

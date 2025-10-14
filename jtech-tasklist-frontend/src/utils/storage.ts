@@ -6,6 +6,7 @@
 const TOKEN_KEY = 'auth_token'
 const REFRESH_TOKEN_KEY = 'refresh_token'
 const USER_KEY = 'user_data'
+const REMEMBER_ME_KEY = 'remember_me'
 
 // ========== localStorage ==========
 
@@ -168,6 +169,27 @@ export function clearAuthData(): void {
   removeToken()
   removeRefreshToken()
   removeUser()
+}
+
+/**
+ * Salva a preferência de "lembrar-me"
+ */
+export function saveRememberMe(remember: boolean): void {
+  setItem(REMEMBER_ME_KEY, remember ? '1' : '0')
+}
+
+/**
+ * Recupera a preferência de "lembrar-me"
+ */
+export function getRememberMe(): boolean {
+  return getItem<string>(REMEMBER_ME_KEY) === '1'
+}
+
+/**
+ * Remove a preferência de "lembrar-me"
+ */
+export function removeRememberMe(): void {
+  removeItem(REMEMBER_ME_KEY)
 }
 
 // ========== Helpers para verificação de Token JWT ==========

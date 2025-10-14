@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import type { Task, Subtask, Tag } from '@/types/task'
+import type { Task } from '@/types/task'
+import { useSubtasksStore } from '@/stores/subtasks'
+import { useTagsStore } from '@/stores/tags'
 
 const props = defineProps<{
   task: Task | null
@@ -13,43 +15,60 @@ const emit = defineEmits<{
   'update': [task: Task]
   'delete': [taskId: string]
   'complete': [taskId: string]
-  'add-subtask': [taskId: string, text: string]
-  'toggle-subtask': [taskId: string, subtaskId: number]
-  'delete-subtask': [taskId: string, subtaskId: number]
-  'add-tag': [taskId: string, tag: Tag]
-  'remove-tag': [taskId: string, tagName: string]
 }>()
 
-// Estados locais
 const newSubtaskText = ref('')
 const isEditingTitle = ref(false)
 const editedTitle = ref('')
 const showDeleteConfirm = ref(false)
 
-// Mock de subtasks (em produção virá da API/Store)
-const subtasks = ref<Subtask[]>([
-  { id: 1, text: 'Definir estrutura do payload JWT', completed: true },
-  { id: 2, text: 'Configurar filtro Spring Security', completed: true },
-  { id: 3, text: 'Testar endpoint protegido', completed: false },
-])
+// Integração com stores
+const subtasksStore = useSubtasksStore()
+const tagsStore = useTagsStore()
 
-// Mock de membros
-const members = ref([
-  { id: 1, name: 'João Silva', initials: 'JS', color: 'primary', isOwner: true },
-  { id: 2, name: 'Maria Souza', initials: 'MS', color: 'red', isOwner: false },
-])
+watch(() => props.task, async (task) => {
+  if (task && props.isOpen) {
+    await subtasksStore.fetchSubtasks(task.folder.id, task.id)
+    await tagsStore.fetchTags(task.folder.id)
+  }
+}, { immediate: true })
 
-// Computed
+const subtasks = computed(() => subtasksStore.subtasks)
+const tags = computed(() => tagsStore.tags)
+
+const isTaskCompleted = computed(() => !!props.task?.completed)
+
 const completedSubtasks = computed(() =>
-  subtasks.value.filter(s => s.completed).length
+  subtasks.value.filter((s: Subtask) => s.completed).length
 )
-
+const totalSubtasks = computed(() => subtasks.value.length)
 const progressPercentage = computed(() => {
-  if (!props.task?.maxSubtasks) return 0
-  return Math.round((completedSubtasks.value / props.task.maxSubtasks) * 100)
+  if (!totalSubtasks.value) return 0
+  return Math.round((completedSubtasks.value / totalSubtasks.value) * 100)
 })
 
-const isTaskCompleted = computed(() => props.task?.completed ?? false)
+async function handleAddSubtask() {
+  if (!props.task || !newSubtaskText.value.trim()) return
+  await subtasksStore.addSubtask(props.task.folder.id, props.task.id, { description: newSubtaskText.value })
+  newSubtaskText.value = ''
+}
+
+async function handleToggleSubtask(subtaskId: number) {
+  // Aqui você pode implementar a lógica de toggle na API, se necessário
+}
+async function handleDeleteSubtask(subtaskId: number) {
+  // Aqui você pode implementar a lógica de deleção na API, se necessário
+}
+
+async function handleAddTag(tagId: number) {
+  if (!props.task) return
+  await tagsStore.associateTag(props.task.id, tagId)
+}
+
+async function handleRemoveTag(tagId: number) {
+  if (!props.task) return
+  await tagsStore.dissociateTag(props.task.id, tagId)
+}
 
 // Watchers
 watch(() => props.task, (newTask) => {
@@ -76,45 +95,6 @@ const handleClose = () => {
   emit('close')
 }
 
-const handleAddSubtask = () => {
-  if (newSubtaskText.value.trim() && props.task) {
-    emit('add-subtask', props.task.id, newSubtaskText.value.trim())
-
-    // Mock local (remover em produção)
-    subtasks.value.push({
-      id: Date.now(),
-      text: newSubtaskText.value.trim(),
-      completed: false
-    })
-
-    newSubtaskText.value = ''
-  }
-}
-
-const handleToggleSubtask = (subtaskId: number) => {
-  if (props.task) {
-    emit('toggle-subtask', props.task.id, subtaskId)
-
-    // Mock local (remover em produção)
-    const subtask = subtasks.value.find(s => s.id === subtaskId)
-    if (subtask) {
-      subtask.completed = !subtask.completed
-    }
-  }
-}
-
-const handleDeleteSubtask = (subtaskId: number) => {
-  if (props.task) {
-    emit('delete-subtask', props.task.id, subtaskId)
-
-    // Mock local (remover em produção)
-    const index = subtasks.value.findIndex(s => s.id === subtaskId)
-    if (index > -1) {
-      subtasks.value.splice(index, 1)
-    }
-  }
-}
-
 const handleSaveTitle = () => {
   if (props.task && editedTitle.value.trim()) {
     const updatedTask = { ...props.task, title: editedTitle.value.trim() }
@@ -129,17 +109,10 @@ const handleDelete = () => {
     handleClose()
   }
 }
-
 const handleComplete = () => {
   if (props.task) {
     emit('complete', props.task.id)
     handleClose()
-  }
-}
-
-const handleRemoveTag = (tagName: string) => {
-  if (props.task) {
-    emit('remove-tag', props.task.id, tagName)
   }
 }
 

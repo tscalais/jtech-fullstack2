@@ -1,11 +1,4 @@
-// Tipos alinhados com a nova API OpenAPI 3.1.0
-
-export interface UserDTO {
-  id: string;
-  userName: string;
-  password: string;
-  fullName: string;
-}
+// Tipos de autenticação e usuário alinhados à nova API OpenAPI 3.1.0
 
 export interface AuthRequest {
   userName: string;
@@ -14,6 +7,7 @@ export interface AuthRequest {
 
 export interface AuthResponse {
   token: string;
+  user: UserDTO;
 }
 
 export interface UserRequest {
@@ -21,3 +15,18 @@ export interface UserRequest {
   password: string;
   fullName: string;
 }
+
+export interface UserDTO {
+  id: string;
+  userName: string;
+  password: string;
+  fullName: string;
+}
+
+export interface UserEntity {
+  id: string;
+  userName: string;
+  password: string;
+  fullName: string;
+}
+

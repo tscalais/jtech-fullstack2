@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { Task, Tag } from '@/types/task'
+import { computed, watch } from 'vue'
+import type { Task } from '@/types/task'
+import { useTagsStore } from '@/stores/tags'
 
 
 const props = defineProps<{
@@ -12,9 +13,15 @@ const emit = defineEmits<{
   toggleComplete: [taskId: string]
 }>()
 
+const tagsStore = useTagsStore()
+
+watch(() => props.task.folder.id, (folderId) => {
+  if (folderId) tagsStore.fetchTags(folderId)
+}, { immediate: true })
+
 const borderColor = computed(() => {
   if (props.task.completed) return 'border-green-300'
-  if (props.task.tags?.some((t: Tag) => t.name === 'Urgente')) return 'border-yellow-300'
+  if (props.task.tags?.some((t) => t.name === 'Urgente')) return 'border-yellow-300'
   return 'border-gray-300'
 })
 

@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import type { Task } from '@/types/task'
+import { ref, computed, watch } from 'vue'
+import type { Task, Subtask } from '@/types/task'
+import { useSubtasksStore } from '@/stores/subtasks'
+import { useTagsStore } from '@/stores/tags'
 
 const props = defineProps<{
   task: Task | null
@@ -9,16 +11,54 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: []
-  delete: [taskId: string]
-  complete: [taskId: string]
+  delete: [taskId: number]
+  complete: [taskId: number]
 }>()
 
 const newSubtaskText = ref('')
 const showDeleteConfirm = ref(false)
 
+const subtasksStore = useSubtasksStore()
+const tagsStore = useTagsStore()
+
+watch(() => props.task, async (task) => {
+  if (task && props.isOpen) {
+    await subtasksStore.fetchSubtasks(task.folder.id, task.id)
+    await tagsStore.fetchTags(task.folder.id)
+  }
+}, { immediate: true })
+
+const subtasks = computed(() => subtasksStore.subtasks)
+const tags = computed(() => tagsStore.tags)
+const completedSubtasks = computed(() => subtasks.value.filter((s: Subtask) => s.completed).length)
+const totalSubtasks = computed(() => subtasks.value.length)
+
 const handleClose = () => {
   emit('close')
   showDeleteConfirm.value = false
+}
+
+async function handleAddSubtask() {
+  if (!props.task || !newSubtaskText.value.trim()) return
+  await subtasksStore.addSubtask(props.task.folder.id, props.task.id, { description: newSubtaskText.value })
+  newSubtaskText.value = ''
+}
+
+async function handleAddTag(tagId: number) {
+  if (!props.task) return
+  await tagsStore.associateTag(props.task.id, tagId)
+}
+
+async function handleRemoveTag(tagId: number) {
+  if (!props.task) return
+  await tagsStore.dissociateTag(props.task.id, tagId)
+}
+
+function handleToggleSubtask(subtask: Subtask) {
+  // Implemente a lógica de toggle na API, se necessário
+}
+function handleRemoveSubtask(subtaskId: number) {
+  // Implemente a lógica de deleção na API, se necessário
 }
 </script>
 
@@ -57,7 +97,7 @@ const handleClose = () => {
 
           <!-- Subtasks -->
           <div>
-            <h4 class="font-semibold mb-2">Microtarefas ({{ task.subtasks }}/{{ task.maxSubtasks }})</h4>
+            <h4 class="font-semibold mb-2">Microtarefas ({{ completedSubtasks }}/{{ totalSubtasks }})</h4>
             <div class="flex space-x-2">
               <input
                 v-model="newSubtaskText"
@@ -65,9 +105,42 @@ const handleClose = () => {
                 placeholder="Nova microtarefa..."
                 class="flex-1 p-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
               />
-              <button class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700">
+              <button
+                @click="handleAddSubtask"
+                class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700"
+              >
                 Add
               </button>
+            </div>
+
+            <!-- Existing Subtasks -->
+            <div class="mt-4">
+              <div
+                v-for="subtask in subtasks"
+                :key="subtask.id"
+                class="flex items-center justify-between p-2 border-b"
+              >
+                <div class="flex items-center">
+                  <input
+                    type="checkbox"
+                    v-model="subtask.completed"
+                    @change="handleToggleSubtask(subtask)"
+                    class="mr-2"
+                  />
+                  <span :class="`line-through text-gray-400`" v-if="subtask.completed">
+                    {{ subtask.description }}
+                  </span>
+                  <span v-else>{{ subtask.description }}</span>
+                </div>
+                <button
+                  @click="handleRemoveSubtask(subtask.id)"
+                  class="text-red-600 hover:text-red-800"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 

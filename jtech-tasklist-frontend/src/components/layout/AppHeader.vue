@@ -76,7 +76,7 @@ const handleSelectFolder = (folderId: string) => {
       <!-- Logo/Ícone da Aplicação -->
       <div class="flex items-center space-x-2">
         <svg
-          class="w-8 h-8 text-gray-900 dark:text-white flex-shrink-0"
+          class="w-8 h-8 text-indigo-900 dark:text-indigo-300 flex-shrink-0"
           width="800px"
           height="800px"
           viewBox="0 0 24 24"
@@ -95,7 +95,7 @@ const handleSelectFolder = (folderId: string) => {
           />
         </svg>
 
-        <span class="hidden md:block text-xl font-bold text-gray-900 dark:text-white"
+        <span class="hidden md:block text-xl font-bold text-indigo-900 dark:text-indigo-300"
           >TaskList</span
         >
       </div>

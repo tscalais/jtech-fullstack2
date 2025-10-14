@@ -1,13 +1,17 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { login as apiLogin, register as apiRegister, validateToken as apiValidateToken, getCurrentUser, type AuthRequest, type AuthResponse, type UserRequest, type UserDTO } from '@/lib/api/client'
+import { login as apiLogin, register as apiRegister, validateToken as apiValidateToken, getCurrentUser } from '@/lib/api'
+import type { AuthRequest, UserRequest, UserDTO } from '@/types'
 import {
   saveToken,
   saveUser,
   getToken,
   getUser,
   clearAuthData,
-  isTokenExpired
+  isTokenExpired,
+  saveRememberMe,
+  getRememberMe,
+  removeRememberMe
 } from '@/utils/storage'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -25,26 +29,36 @@ export const useAuthStore = defineStore('auth', () => {
   // ========== Actions ==========
 
   /**
-   * Inicializa a store com dados do localStorage
+   * Inicializa a store com dados do localStorage e valida o token com o backend
    */
-  function initialize() {
+  async function initialize() {
     const storedToken = getToken()
     const storedUser = getUser<UserDTO>()
+    const rememberMe = getRememberMe()
 
-    if (storedToken && storedUser && !isTokenExpired(storedToken)) {
+    if (rememberMe && storedToken && storedUser && !isTokenExpired(storedToken)) {
       token.value = storedToken
       user.value = storedUser
+      try {
+        await validate()
+      } catch {
+        clearAuthData()
+        token.value = null
+        user.value = null
+        removeRememberMe()
+      }
     } else {
       clearAuthData()
       token.value = null
       user.value = null
+      removeRememberMe()
     }
   }
 
   /**
    * Faz login do usuário
    */
-  async function login(data: AuthRequest): Promise<void> {
+  async function login(data: AuthRequest, rememberMe = false): Promise<void> {
     isLoading.value = true
     error.value = null
 
@@ -52,11 +66,16 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await apiLogin(data)
       token.value = response.token
       saveToken(response.token)
-
-      // Opcional: buscar dados do usuário logado, se necessário
-      // user.value = ...
-    } catch (err: any) {
-      error.value = err.message || 'Erro ao fazer login'
+      // Salva usuário e rememberMe
+      saveUser(response.user)
+      if (rememberMe) {
+        saveRememberMe(true)
+      } else {
+        removeRememberMe()
+      }
+      user.value = response.user
+    } catch (err: unknown) {
+      error.value = (err as any).message || 'Erro ao fazer login'
       throw err
     } finally {
       isLoading.value = false
@@ -75,8 +94,8 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = userData
       saveUser(userData)
       return userData
-    } catch (err: any) {
-      error.value = err.message || 'Erro ao registrar usuário'
+    } catch (err: unknown) {
+      error.value = (err as any).message || 'Erro ao registrar usuário'
       throw err
     } finally {
       isLoading.value = false
@@ -91,7 +110,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       await apiValidateToken(token.value)
-    } catch (err: any) {
+    } catch (err: unknown) {
       logout()
     }
   }
@@ -106,8 +125,8 @@ export const useAuthStore = defineStore('auth', () => {
       const userData = await getCurrentUser(token.value!)
       user.value = userData
       saveUser(userData)
-    } catch (err: any) {
-      error.value = err.message || 'Erro ao buscar usuário'
+    } catch (err: unknown) {
+      error.value = (err as any).message || 'Erro ao buscar usuário'
       user.value = null
       clearAuthData()
       token.value = null

@@ -1,5 +1,3 @@
-// Tipos alinhados com a nova API OpenAPI 3.1.0
-
 export interface FolderResponse {
   id: number;
   name: string;
@@ -17,14 +15,7 @@ export interface FolderRequest {
 export interface FolderEntity {
   id: number;
   name: string;
-  owner: UserEntity;
+  owner: import('./auth').UserEntity;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface UserEntity {
-  id: string;
-  userName: string;
-  password: string;
-  fullName: string;
 }

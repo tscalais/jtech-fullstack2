@@ -194,8 +194,8 @@ const handleSubmit = async () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (err?.response?.status === 409) {
       error.value = 'Este nome de usuário já está cadastrado'
-      validations.userName = { valid: false, message: 'Nome de usuário já cadastrado' }
-      toast.error('Este nome de usuário já está cadastrado')
+      validations.userName = { valid: false, message: error.value }
+      toast.error(error.value)
     }
   } finally {
     isLoading.value = false

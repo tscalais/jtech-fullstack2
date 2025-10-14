@@ -2,11 +2,18 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { resetPassword } from '@/lib/api/client'
-import type { AuthRequest } from '@/types/auth'
-import { ArrowLeftEndOnRectangleIcon, UserIcon, LockClosedIcon, EyeIcon, EyeSlashIcon, ExclamationTriangleIcon, ExclamationCircleIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { resetPassword } from '@/lib/api'
+import type { AuthRequest } from '@/types'
+import {
+  ArrowLeftEndOnRectangleIcon,
+  UserIcon,
+  LockClosedIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  ExclamationTriangleIcon,
+} from '@heroicons/vue/24/outline'
 import { toast } from 'vue3-toastify'
-
+import { getRememberMe } from '@/utils/storage'
 
 const router = useRouter()
 const route = useRoute()
@@ -42,9 +49,19 @@ onMounted(() => {
   // Se já está autenticado, redireciona
   if (authStore.isAuthenticated) {
     router.push('/dashboard')
+    return
   }
 
-  // Carrega email salvo se houver
+  // Login automático se rememberMe e token válido
+  if (getRememberMe()) {
+    authStore.initialize()
+    if (authStore.isAuthenticated) {
+      router.push('/dashboard')
+      return
+    }
+  }
+
+  // Carrega usuário salvo se houver (apenas para preencher campo)
   const savedUserName = localStorage.getItem('saved_userName')
   if (savedUserName) {
     form.value.userName = savedUserName
@@ -68,34 +85,17 @@ const handleSubmit = async () => {
   form.value.password = form.value.userName
 
   try {
-    await authStore.login(form.value)
-
-    // Salva email se "lembrar-me" estiver marcado
+    await authStore.login(form.value, rememberMe.value)
+    // Salva usuario se "lembrar-me" estiver marcado (apenas para preencher campo futuramente)
     if (rememberMe.value) {
       localStorage.setItem('saved_userName', form.value.userName)
     } else {
       localStorage.removeItem('saved_userName')
     }
-
     // Redireciona para a página desejada
     router.push(redirectPath.value)
   } catch (err: unknown) {
-    let msg = 'Usuário ou senha inválidos'
-    if (
-      typeof err === 'object' &&
-      err &&
-      'response' in err &&
-      err.response &&
-      typeof err.response === 'object' &&
-      'data' in err.response &&
-      err.response.data &&
-      typeof err.response.data === 'object' &&
-      'message' in err.response.data
-    ) {
-      msg = err.response.data.message as string
-    }
-    error.value = msg
-    toast.error(msg, { autoClose: 4000, position: 'top-right' })
+    toast.error('Usuário ou senha inválidos')
   } finally {
     isLoading.value = false
   }
@@ -111,19 +111,28 @@ const goToRegister = () => {
 
 const goToForgotPassword = async () => {
   if (!form.value.userName.trim()) {
-    error.value = 'Informe o nome de usuário para redefinir a senha.'
+    toast.info('Informe o nome de usuário para redefinir a senha.')
     return
   }
   forgotPasswordLoading.value = true
   error.value = null
   try {
-    await resetPassword(form.value.userName)
+    // Corrigir o uso de resetPassword para passar um objeto AuthRequest
+    await resetPassword(form.value)
     error.value = null
-    alert('Senha redefinida! Agora sua senha é igual ao seu nome de usuário.')
+    toast.done('Senha redefinida! Agora sua senha é igual ao seu nome de usuário.')
   } catch (err) {
-    error.value = 'Erro ao redefinir senha. Verifique o nome de usuário.'
+    // Substituir catch (err: unknown) e tratar corretamente
+    if (err.status === 404) {
+      error.value = 'Verifique o nome de usuário.'
+    } else {
+      error.value = 'Tente novamente mais tarde.'
+    }
   } finally {
     forgotPasswordLoading.value = false
+  }
+  if (error.value) {
+    toast.error('Erro ao redefinir senha.' + error.value)
   }
 }
 </script>
@@ -150,7 +159,9 @@ const goToForgotPassword = async () => {
           v-if="sessionExpired"
           class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-start space-x-3 dark:bg-yellow-900/20 dark:border-yellow-700"
         >
-          <ExclamationTriangleIcon class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5 dark:text-yellow-400" />
+          <ExclamationTriangleIcon
+            class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5 dark:text-yellow-400"
+          />
           <p class="text-sm text-yellow-800 dark:text-yellow-200">
             Sua sessão expirou. Por favor, faça login novamente.
           </p>
@@ -211,8 +222,8 @@ const goToForgotPassword = async () => {
                 class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                 :disabled="isLoading"
               >
-                <EyeIcon v-if="!showPassword" class="w-5 h-5"/>
-                <EyeSlashIcon v-else class="w-5 h-5"/>
+                <EyeIcon v-if="!showPassword" class="w-5 h-5" />
+                <EyeSlashIcon v-else class="w-5 h-5" />
               </button>
             </div>
           </div>
