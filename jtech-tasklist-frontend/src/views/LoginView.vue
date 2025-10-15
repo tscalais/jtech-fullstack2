@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { resetPassword } from '@/lib/api'
@@ -21,7 +21,7 @@ const authStore = useAuthStore()
 
 // ========== State ==========
 const form = ref<AuthRequest>({
-  userName: '', // alinhado com backend
+  userName: '',
   password: '',
 })
 
@@ -45,7 +45,7 @@ const sessionExpired = computed(() => {
 })
 
 // ========== Lifecycle ==========
-onMounted(() => {
+onMounted(async () => {
   // Se já está autenticado, redireciona
   if (authStore.isAuthenticated) {
     router.push('/dashboard')
@@ -54,11 +54,7 @@ onMounted(() => {
 
   // Login automático se rememberMe e token válido
   if (getRememberMe()) {
-    authStore.initialize()
-    if (authStore.isAuthenticated) {
-      router.push('/dashboard')
-      return
-    }
+    await authStore.initialize()
   }
 
   // Carrega usuário salvo se houver (apenas para preencher campo)
@@ -74,6 +70,23 @@ onMounted(() => {
   }
 })
 
+// Redireciona automaticamente após login bem-sucedido
+let firstRun = true
+watch(
+  () => authStore.isAuthenticated,
+  (isAuth) => {
+    console.log('watch isAuthenticated:', { isAuth, firstRun, redirectPath: redirectPath.value })
+    if (firstRun) {
+      firstRun = false
+      return
+    }
+    if (isAuth) {
+      console.log('Redirecionando para', redirectPath.value)
+      router.push(redirectPath.value)
+    }
+  },
+)
+
 // ========== Methods ==========
 const handleSubmit = async () => {
   if (!isFormValid.value) return
@@ -81,20 +94,15 @@ const handleSubmit = async () => {
   isLoading.value = true
   error.value = null
 
-  // For test: password must always be equal to username
-  form.value.password = form.value.userName
-
   try {
     await authStore.login(form.value, rememberMe.value)
-    // Salva usuario se "lembrar-me" estiver marcado (apenas para preencher campo futuramente)
-    if (rememberMe.value) {
-      localStorage.setItem('saved_userName', form.value.userName)
-    } else {
-      localStorage.removeItem('saved_userName')
-    }
-    // Redireciona para a página desejada
-    router.push(redirectPath.value)
-  } catch (err: unknown) {
+    // Log para depuração
+    console.log('Login:', {
+      token: authStore.token,
+      user: authStore.user,
+      isAuthenticated: authStore.isAuthenticated
+    })
+  } catch {
     toast.error('Usuário ou senha inválidos')
   } finally {
     isLoading.value = false
@@ -117,13 +125,11 @@ const goToForgotPassword = async () => {
   forgotPasswordLoading.value = true
   error.value = null
   try {
-    // Corrigir o uso de resetPassword para passar um objeto AuthRequest
     await resetPassword(form.value)
     error.value = null
     toast.done('Senha redefinida! Agora sua senha é igual ao seu nome de usuário.')
-  } catch (err) {
-    // Substituir catch (err: unknown) e tratar corretamente
-    if (err.status === 404) {
+  } catch (err: any) {
+    if (err && err.status === 404) {
       error.value = 'Verifique o nome de usuário.'
     } else {
       error.value = 'Tente novamente mais tarde.'
@@ -138,7 +144,9 @@ const goToForgotPassword = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 px-4 py-12">
+  <div
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 px-4 py-12"
+  >
     <!-- Login Card -->
     <div class="w-full max-w-md">
       <!-- Logo e Título -->

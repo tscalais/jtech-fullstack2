@@ -175,23 +175,19 @@ const handleSubmit = async () => {
   isLoading.value = true
   error.value = null
 
-  // For test: password and confirmation must always be equal to username
-  form.password = form.userName
-  form.passwordConfirmation = form.userName
-
   try {
     await authStore.register(form)
 
     // Redireciona para dashboard após registro bem-sucedido
     router.push('/dashboard')
   } catch (err) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
     const errorMsg = err?.response?.data?.message || 'Erro ao criar conta. Tente novamente mais tarde.'
     toast.error(errorMsg)
     error.value = errorMsg
 
     // Se for erro de userName já existente
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
     if (err?.response?.status === 409) {
       error.value = 'Este nome de usuário já está cadastrado'
       validations.userName = { valid: false, message: error.value }
@@ -217,7 +213,7 @@ const goToLogin = () => {
 
 <template>
   <div
-    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-teal-100 dark:from-gray-900 dark:to-gray-800 px-4 py-12"
+    class="min-h-screen h-screen overflow-auto flex justify-center bg-gradient-to-br from-green-50 to-teal-100 dark:from-gray-900 dark:to-gray-800 px-4 py-12"
   >
     <!-- Register Card -->
     <div class="w-full max-w-md">

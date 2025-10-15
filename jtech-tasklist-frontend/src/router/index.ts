@@ -157,7 +157,7 @@ router.beforeEach(async (to, from, next) => {
 
       try {
         // Tenta fazer refresh do token
-        await authStore.refreshAccessToken()
+        //await authStore.refreshAccessToken()
         next()
       } catch (error) {
         console.error('Erro ao fazer refresh do token:', error)

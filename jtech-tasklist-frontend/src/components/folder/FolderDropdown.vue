@@ -138,7 +138,7 @@ const handleJoinFolder = () => {
             <div class="flex items-center space-x-2">
               <!-- Ícone da Pasta -->
               <svg
-                class="w-5 h-5"
+                class="w-5 h-5 text-gray-900 dark:text-white"
                 :fill="currentFolderId === folder.id ? 'currentColor' : 'none'"
                 :stroke="currentFolderId === folder.id ? 'none' : 'currentColor'"
                 viewBox="0 0 24 24"

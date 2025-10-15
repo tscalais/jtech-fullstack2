@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { listTasks, getTask, createTask as apiCreateTask, updateTask as apiUpdateTask, deleteTask as apiDeleteTask, updateFavorite, updateTaskStatus } from '@/lib/api/client'
+import { listTasks, getTask, createTask as apiCreateTask, updateTask as apiUpdateTask, deleteTask as apiDeleteTask, updateFavorite, updateTaskStatus } from '@/lib/api/tasks'
 import { useFoldersStore } from './folders'
 import type { TaskEntity } from '@/types/task'
 
@@ -29,8 +29,12 @@ export const useTasksStore = defineStore('tasks', () => {
       // Remove tarefas antigas dessa pasta e adiciona as novas
       tasks.value = tasks.value.filter(t => t.folder.id !== folderId)
       tasks.value.push(...data)
-    } catch (err: any) {
-      error.value = err.message || 'Erro ao buscar tarefas'
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        error.value = err.message || 'Erro ao buscar tarefas'
+      } else {
+        error.value = 'Erro ao buscar tarefas'
+      }
       throw err
     } finally {
       isLoading.value = false
@@ -49,8 +53,12 @@ export const useTasksStore = defineStore('tasks', () => {
         tasks.value.push(data)
       }
       return data
-    } catch (err: any) {
-      error.value = err.message || 'Erro ao buscar tarefa'
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        error.value = err.message || 'Erro ao buscar tarefa'
+      } else {
+        error.value = 'Erro ao buscar tarefa'
+      }
       throw err
     } finally {
       isLoading.value = false
@@ -64,8 +72,12 @@ export const useTasksStore = defineStore('tasks', () => {
       const newTask = await apiCreateTask(folderId, task)
       tasks.value.push(newTask)
       return newTask
-    } catch (err: any) {
-      error.value = err.message || 'Erro ao criar tarefa'
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        error.value = err.message || 'Erro ao criar tarefa'
+      } else {
+        error.value = 'Erro ao criar tarefa'
+      }
       throw err
     } finally {
       isLoading.value = false
@@ -82,8 +94,12 @@ export const useTasksStore = defineStore('tasks', () => {
         tasks.value[index] = updatedTask
       }
       return updatedTask
-    } catch (err: any) {
-      error.value = err.message || 'Erro ao atualizar tarefa'
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        error.value = err.message || 'Erro ao atualizar tarefa'
+      } else {
+        error.value = 'Erro ao atualizar tarefa'
+      }
       throw err
     } finally {
       isLoading.value = false
@@ -99,8 +115,12 @@ export const useTasksStore = defineStore('tasks', () => {
       if (index !== -1) {
         tasks.value.splice(index, 1)
       }
-    } catch (err: any) {
-      error.value = err.message || 'Erro ao deletar tarefa'
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        error.value = err.message || 'Erro ao deletar tarefa'
+      } else {
+        error.value = 'Erro ao deletar tarefa'
+      }
       throw err
     } finally {
       isLoading.value = false
@@ -117,26 +137,34 @@ export const useTasksStore = defineStore('tasks', () => {
         tasks.value[index] = updatedTask
       }
       return updatedTask
-    } catch (err: any) {
-      error.value = err.message || 'Erro ao favoritar tarefa'
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        error.value = err.message || 'Erro ao favoritar tarefa'
+      } else {
+        error.value = 'Erro ao favoritar tarefa'
+      }
       throw err
     } finally {
       isLoading.value = false
     }
   }
 
-  async function setTaskStatus(folderId: number, taskId: number, completed: boolean): Promise<TaskEntity> {
+  async function setTaskStatus(folderId: number, taskId: number): Promise<TaskEntity> {
     isLoading.value = true
     error.value = null
     try {
-      const updatedTask = await updateTaskStatus(folderId, taskId, { completed })
+      const updatedTask = await updateTaskStatus(folderId, taskId)
       const index = tasks.value.findIndex(t => t.id === taskId)
       if (index !== -1) {
         tasks.value[index] = updatedTask
       }
       return updatedTask
-    } catch (err: any) {
-      error.value = err.message || 'Erro ao atualizar status da tarefa'
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        error.value = err.message || 'Erro ao atualizar status da tarefa'
+      } else {
+        error.value = 'Erro ao atualizar status da tarefa'
+      }
       throw err
     } finally {
       isLoading.value = false

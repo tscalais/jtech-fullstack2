@@ -1,7 +1,6 @@
-
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { listSubtasks, createSubtask } from '@/lib/api/client'
+import { listSubtasks, createSubtask } from '@/lib/api/tasks'
 import type { TaskEntity } from '@/types/task'
 
 export const useSubtasksStore = defineStore('subtasks', () => {

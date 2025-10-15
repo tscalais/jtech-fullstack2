@@ -6,7 +6,7 @@ import {
   createFolder as apiCreateFolder,
   updateFolder as apiUpdateFolder,
   deleteFolder as apiDeleteFolder,
-} from '@/lib/api/client'
+} from '@/lib/api/folders'
 import type { FolderResponse, FolderRequest } from '@/types/folder'
 
 export const useFoldersStore = defineStore('folders', () => {

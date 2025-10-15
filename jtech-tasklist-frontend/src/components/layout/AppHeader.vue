@@ -9,7 +9,6 @@ import {
   UserCircleIcon,
   Cog6ToothIcon,
   ArrowRightStartOnRectangleIcon,
-  ClipboardDocumentCheckIcon as ClipboardIcon,
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps<{
