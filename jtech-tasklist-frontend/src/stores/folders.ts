@@ -163,12 +163,22 @@ export const useFoldersStore = defineStore('folders', () => {
   /**
    * Define a pasta atual
    */
-  function setCurrentFolder(folderId: number): void {
+  async function setCurrentFolder(folderId: number): Promise<void> {
     const folder = folders.value.find((f) => f.id === folderId)
     if (folder) {
       currentFolderId.value = folderId
     } else {
-      console.warn(`Pasta com ID ${folderId} não encontrada`)
+      try {
+        // Tenta buscar a pasta na API e adiciona ao array se encontrar
+        const fetched = await fetchFolderById(folderId)
+        if (fetched) {
+          currentFolderId.value = folderId
+          return
+        }
+      } catch (e) {
+        // Se não encontrar, exibe o aviso
+        console.warn(`Pasta com ID ${folderId} não encontrada`)
+      }
     }
   }
 

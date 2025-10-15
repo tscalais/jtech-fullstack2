@@ -63,17 +63,12 @@ onMounted(async () => {
 })
 
 // Redireciona automaticamente após login bem-sucedido
-let firstRun = true
+
 watch(
   () => authStore.isAuthenticated,
   (isAuth) => {
-    console.log('watch isAuthenticated:', { isAuth, firstRun, redirectPath: redirectPath.value })
-    if (firstRun) {
-      firstRun = false
-      return
-    }
     if (isAuth) {
-      console.log('Redirecionando para', redirectPath.value)
+      toast.done('Entrando...')
       router.push(redirectPath.value)
     }
   },
@@ -281,24 +276,3 @@ const goToForgotPassword = async () => {
   </div>
 </template>
 
-<style scoped>
-/* Animação para mensagens de erro */
-.slide-down-enter-active {
-  animation: slideDown 0.3s ease-out;
-}
-
-.slide-down-leave-active {
-  animation: slideDown 0.3s ease-in reverse;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-</style>

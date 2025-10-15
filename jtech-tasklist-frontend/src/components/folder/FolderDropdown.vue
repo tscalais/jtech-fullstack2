@@ -12,7 +12,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   select: [folderId: string]
   toggle: []
-  create: []
+  create: [folderName: string]
   join: [accessKey: string]
 }>()
 
@@ -38,6 +38,27 @@ const handleJoinFolder = () => {
     accessKey.value = ''
   }
 }
+
+const creatingFolder = ref(false)
+const newFolderName = ref('')
+
+const handleStartCreateFolder = () => {
+  creatingFolder.value = true
+  newFolderName.value = ''
+}
+
+const handleConfirmCreateFolder = () => {
+  if (newFolderName.value.trim()) {
+    emit('create', newFolderName.value.trim())
+    creatingFolder.value = false
+    newFolderName.value = ''
+  }
+}
+
+const handleCancelCreateFolder = () => {
+  creatingFolder.value = false
+  newFolderName.value = ''
+}
 </script>
 
 <template>
@@ -46,7 +67,7 @@ const handleJoinFolder = () => {
     <PopoverButton
       as="button"
       id="folder-menu-button"
-      class="flex items-center gap-x-2 px-3 py-2 rounded-md focus:outline-none bg-white text-gray-900 hover:bg-indigo-100 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-800"
+      class="flex items-center gap-x-2 px-3 py-2 rounded-md focus:outline-none btn-secondary"
     >
       <!-- Ícone Pasta (Mobile) -->
       <svg
@@ -132,39 +153,71 @@ const handleJoinFolder = () => {
         <!-- Separador -->
         <div class="border-t border-gray-200 dark:border-gray-700 my-2"></div>
 
-        <!-- Ações da Pasta -->
+        <!-- Ações para Nova Pasta -->
         <div class="p-2 space-y-2">
-          <!-- Botão Nova Pasta -->
-          <button
-            class="w-full flex items-center justify-center space-x-2 bg-primary-600 text-white py-2 rounded-xl hover:bg-primary-700 dark:hover:bg-primary-800 transition duration-150 shadow-md text-sm font-medium"
-            @click="handleCreateFolder"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            <span>Nova Pasta</span>
-          </button>
-
           <!-- Input para Chave de Acesso -->
           <div class="flex w-full">
             <input
               v-model="accessKey"
               type="text"
               placeholder="Chave de Acesso"
-              class="flex-grow p-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-l-xl rounded-r-none text-sm focus:ring-primary-500 focus:border-primary-500 focus:z-10 focus:outline-none"
+              class="input-field pl-10 rounded-r-none text-sm rounded-l-xl"
               @keyup.enter="handleJoinFolder"
             />
             <button
-              class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 dark:border-gray-700 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-r-xl rounded-l-none hover:bg-gray-300 dark:hover:bg-gray-600 transition duration-150 text-sm font-medium "
+              class="inline-flex items-center px-2 py-2 rounded-l-none btn-primary"
               @click="handleJoinFolder"
               :disabled="!accessKey.trim()"
             >
               <i class="fa-solid fa-plug w-4 h-4" aria-hidden="true" />
+            </button>
+          </div>
+
+          <!-- Criar Pasta Inline -->
+          <div v-if="creatingFolder" class="flex w-full space-x-2">
+            <!-- Input para Chave de Acesso -->
+            <div class="flex w-full">
+              <input
+                v-model="newFolderName"
+                type="text"
+                placeholder="Nova Pasta"
+                class="input-field pl-10 rounded-r-none text-sm rounded-l-xl"
+                @keyup.enter="handleConfirmCreateFolder"
+              />
+              <button
+                class="inline-flex items-center px-2 py-2 btn-success rounded-l-none rounded-r-none"
+                @click="handleConfirmCreateFolder"
+                :disabled="!newFolderName.trim()"
+              >
+                <i class="fa-solid fa-check w-4 h-4" aria-hidden="true" />
+              </button>
+
+              <!-- Abrir form detalhado para criar pasta (futuro) -->
+              <!--
+              <button
+                class="inline-flex items-center px-2 py-2 btn-primary rounded-l-none rounded-r-none"
+                @click="handleCreateDetailedFolder"
+                >
+                <i class="fa-solid fa-folder-plus w-4 h-4" aria-hidden="true" />
+              </button>
+              -->
+
+              <button
+                class="inline-flex items-center px-2 py-2 rounded-l-none btn-danger"
+                @click="handleCancelCreateFolder"
+              >
+                <i class="fa-solid fa-xmark w-4 h-4" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+          <!-- Botão para Criar Nova Pasta (Inline) -->
+          <div v-else>
+            <button
+              class="w-full flex items-center justify-center space-x-2 btn-secondary text-sm"
+              @click="handleStartCreateFolder"
+            >
+              <i class="fa-solid fa-folder-plus w-4 h-4" aria-hidden="true" />
+              <span class="text-xs">Criar Nova Pasta</span>
             </button>
           </div>
         </div>

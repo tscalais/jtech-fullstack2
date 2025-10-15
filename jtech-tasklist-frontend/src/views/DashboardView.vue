@@ -16,6 +16,7 @@ import { useAuthStore } from '@/stores/auth'
 
 // Types
 import type { Task, Tag } from '@/types/task'
+import { toast } from 'vue3-toastify'
 
 // Router & Stores
 const router = useRouter()
@@ -43,7 +44,9 @@ const filteredTasks = computed(() => {
   tasks = tasks.filter((t) => t.folder && t.folder.id === foldersStore.currentFolderId)
   // Filtro por tag
   if (activeFilterTag.value) {
-    tasks = tasks.filter((t) => Array.isArray(t.tags) && t.tags.some((tag: any) => tag.name === activeFilterTag.value))
+    tasks = tasks.filter(
+      (t) => Array.isArray(t.tags) && t.tags.some((tag: any) => tag.name === activeFilterTag.value),
+    )
   }
   // Filtro por busca
   if (searchQuery.value.trim()) {
@@ -51,7 +54,8 @@ const filteredTasks = computed(() => {
     tasks = tasks.filter(
       (t) =>
         t.title.toLowerCase().includes(query) ||
-        (Array.isArray(t.tags) && t.tags.some((tag: any) => tag.name && tag.name.toLowerCase().includes(query)))
+        (Array.isArray(t.tags) &&
+          t.tags.some((tag: any) => tag.name && tag.name.toLowerCase().includes(query))),
     )
   }
   return tasks
@@ -61,7 +65,9 @@ const taskStats = computed(() => ({
   total: filteredTasks.value.length,
   completed: filteredTasks.value.filter((t) => t.completed).length,
   pending: filteredTasks.value.filter((t) => !t.completed).length,
-  urgent: filteredTasks.value.filter((t) => Array.isArray(t.tags) && t.tags.some((tag: any) => tag.name === 'Urgente')).length,
+  urgent: filteredTasks.value.filter(
+    (t) => Array.isArray(t.tags) && t.tags.some((tag: any) => tag.name === 'Urgente'),
+  ).length,
 }))
 
 // Lifecycle
@@ -74,7 +80,12 @@ watch(
   () => foldersStore.currentFolderId,
   async (newFolderId) => {
     if (typeof newFolderId === 'number') {
-      await loadTasksForFolder(newFolderId)
+      await foldersStore.setCurrentFolder(newFolderId)
+      // Aguarda a pasta estar disponível antes de carregar tarefas
+      const folderExists = foldersStore.folders.some(f => f.id === newFolderId)
+      if (folderExists) {
+        await loadTasksForFolder(newFolderId)
+      }
     }
   },
 )
@@ -85,6 +96,7 @@ const loadInitialData = async () => {
   try {
     await foldersStore.fetchFolders()
     if (typeof foldersStore.currentFolderId === 'number') {
+      await foldersStore.setCurrentFolder(foldersStore.currentFolderId)
       await loadTasksForFolder(foldersStore.currentFolderId)
     }
   } catch (error) {
@@ -113,10 +125,25 @@ const handleSelectFolder = async (folderId: number) => {
   foldersStore.setCurrentFolder(folderId)
 }
 
-const handleCreateFolder = () => {
-  showCreateFolderModal.value = true
-  // Ou navegar para rota de criação:
-  // router.push('/folders/create')
+const handleCreateFolder = async (folderName: string) => {
+  const normalizedName = folderName.trim().toLowerCase()
+  const exists = foldersStore.folders.some((f) => f.name.trim().toLowerCase() === normalizedName)
+  if (!folderName.trim() || exists) {
+    // Exibir aviso se já existe (ajuste para toast se houver)
+    if (exists) {
+      toast.info ('Já existe uma pasta com esse nome.')
+    }
+    return
+  }
+  isLoading.value = true
+  try {
+    await foldersStore.createFolder({ name: folderName.trim() })
+    await foldersStore.fetchFolders()
+  } catch (error) {
+    console.error('Erro ao criar pasta:', error)
+  } finally {
+    isLoading.value = false
+  }
 }
 
 const handleJoinFolder = async (accessKey: string) => {
@@ -145,7 +172,7 @@ const handleCreateTask = async (title: string) => {
       tags: [],
       favorite: false,
       description: '',
-      id: 0
+      id: 0,
     })
   } catch (error) {
     console.error('Erro ao criar tarefa:', error)
@@ -277,14 +304,24 @@ const handleShowProfile = () => {
 </script>
 
 <template>
-  <div class="h-screen overflow-hidden flex flex-col ">
+  <div class="h-screen overflow-hidden flex flex-col">
     <!-- Header -->
     <AppHeader
       :folders="foldersStore.folders"
-      :current-folder-id="foldersStore.currentFolderId !== null ? String(foldersStore.currentFolderId) : ''"
+      :current-folder-id="
+        foldersStore.currentFolderId !== null ? String(foldersStore.currentFolderId) : ''
+      "
       :user-name="authStore.user?.userName"
       :full-name="authStore.user?.fullName"
-      :user-initials="authStore.user ? authStore.user.fullName.split(' ').map(n => n[0]).join('').toUpperCase() : ''"
+      :user-initials="
+        authStore.user
+          ? authStore.user.fullName
+              .split(' ')
+              .map((n) => n[0])
+              .join('')
+              .toUpperCase()
+          : ''
+      "
       :notification-count="0"
       @select-folder="handleSelectFolder"
       @create-folder="handleCreateFolder"
@@ -297,10 +334,7 @@ const handleShowProfile = () => {
     <!-- Main Content Area -->
     <div class="flex flex-1 overflow-hidden relative">
       <!-- Task Panel (Content) -->
-      <main
-        id="task-panel"
-        class="flex-1 min-w-0  p-4 md:p-6 flex flex-col overflow-hidden z-10"
-      >
+      <main id="task-panel" class="flex-1 min-w-0 p-4 md:p-6 flex flex-col overflow-hidden z-10">
         <!-- Header da Pasta Atual com Stats -->
         <div class="mb-6">
           <div class="flex items-center justify-between mb-4">
@@ -334,7 +368,6 @@ const handleShowProfile = () => {
               </button>
             </div>
           </div>
-
         </div>
 
         <!-- Quick Task Form -->

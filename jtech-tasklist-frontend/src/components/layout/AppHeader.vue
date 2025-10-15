@@ -14,7 +14,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'select-folder': [folderId: number]
-  'create-folder': []
+  'create-folder': [folderName: string]
   'join-folder': [accessKey: string]
   logout: []
   'show-notifications': []
@@ -98,7 +98,7 @@ const handleSelectFolder = (folderId: string) => {
         :is-open="isDropdownOpen"
         @select="handleSelectFolder"
         @toggle="toggleDropdown"
-        @create="emit('create-folder')"
+        @create="emit('create-folder', $event)"
         @join="emit('join-folder', $event)"
       />
     </div>
