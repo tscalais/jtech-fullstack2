@@ -4,14 +4,10 @@ import br.com.jtech.tasklist.config.infra.exceptions.UserAlreadyExistsException;
 import br.com.jtech.tasklist.dto.UserRequest;
 import br.com.jtech.tasklist.model.UserDTO;
 import br.com.jtech.tasklist.model.entities.UserEntity;
-import br.com.jtech.tasklist.repository.FolderRepository;
-import br.com.jtech.tasklist.repository.TaskRepository;
-import br.com.jtech.tasklist.repository.UserRepository;
+import br.com.jtech.tasklist.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -19,7 +15,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.when;
 
 class UserServiceTest {
     @Mock
@@ -51,8 +48,8 @@ class UserServiceTest {
         when(userRepository.save(any(UserEntity.class))).thenReturn(user);
         when(folderRepository.save(any())).thenReturn(null);
         when(taskRepository.save(any())).thenReturn(null);
-        UserRequest request = new UserRequest(name, password, "Full Name");
-        UserDTO dto = userService.register(request, true);
+        UserRequest request = new UserRequest(name, password, "Full Name", false);
+        UserDTO dto = userService.register(request);
         assertNotNull(dto);
         assertEquals(name, dto.getUserName());
     }
@@ -63,8 +60,8 @@ class UserServiceTest {
         String password = "pass";
         when(passwordEncoder.encode(password)).thenReturn("encoded");
         when(userRepository.save(any(UserEntity.class))).thenThrow(DataIntegrityViolationException.class);
-        UserRequest request = new UserRequest(name, password, "Full Name");
-        assertThrows(UserAlreadyExistsException.class, () -> userService.register(request, true));
+        UserRequest request = new UserRequest(name, password, "Full Name", false);
+        assertThrows(UserAlreadyExistsException.class, () -> userService.register(request));
     }
 
     @Test
