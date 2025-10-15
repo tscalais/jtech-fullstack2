@@ -3,15 +3,6 @@ import { ref, computed, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import type { RegisterDto } from '@/types/auth'
-import {
-  UserIcon,
-  LockClosedIcon,
-  UserPlusIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  CheckCircleIcon,
-} from '@heroicons/vue/24/outline'
-
 import { toast } from 'vue3-toastify'
 
 const router = useRouter()
@@ -222,7 +213,7 @@ const goToLogin = () => {
         <div
           class="inline-flex items-center justify-center w-16 h-16 bg-green-600 rounded-2xl mb-4 shadow-lg dark:bg-green-500"
         >
-          <UserPlusIcon class="mx-auto h-10 w-auto text-white" />
+          <i class="fa-solid fa-user-plus mx-auto h-10 w-auto text-white" />
         </div>
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Criar sua conta</h1>
         <p class="text-gray-600 dark:text-gray-300">Comece a organizar suas tarefas hoje mesmo</p>
@@ -242,7 +233,7 @@ const goToLogin = () => {
             </label>
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <UserIcon class="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                <i class="fa-solid fa-user w-5 h-5 text-gray-400 dark:text-gray-500" />
               </div>
               <input
                 id="fullName"
@@ -279,7 +270,7 @@ const goToLogin = () => {
             </label>
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <UserIcon class="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                <i class="fa-solid fa-user w-5 h-5 text-gray-400 dark:text-gray-500" />
               </div>
               <input
                 id="userName"
@@ -316,7 +307,7 @@ const goToLogin = () => {
             </label>
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <LockClosedIcon class="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                <i class="fa-solid fa-lock w-5 h-5 text-gray-400 dark:text-gray-500" />
               </div>
               <input
                 id="password"
@@ -340,8 +331,8 @@ const goToLogin = () => {
                 class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                 :disabled="isLoading"
               >
-                <EyeIcon v-if="!showPassword" class="w-5 h-5" />
-                <EyeSlashIcon v-else class="w-5 h-5" />
+                <i v-if="!showPassword" class="fa-solid fa-eye-slash w-5 h-5" />
+                <i v-else class="fa-solid fa-eye w-5 h-5" />
               </button>
             </div>
 
@@ -386,7 +377,7 @@ const goToLogin = () => {
             </label>
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <CheckCircleIcon class="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                <i class="fa-solid fa-check-circle w-5 h-5 text-gray-400 dark:text-gray-500" />
               </div>
               <input
                 id="password-confirmation"
@@ -410,8 +401,8 @@ const goToLogin = () => {
                 class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                 :disabled="isLoading"
               >
-                <EyeIcon v-if="!showPasswordConfirmation" class="w-5 h-5" />
-                <EyeSlashIcon v-else class="w-5 h-5" />
+                <i v-if="!showPasswordConfirmation" class="fa-solid fa-eye-slash w-5 h-5" />
+                <i v-else class="fa-solid fa-eye w-5 h-5" />
               </button>
             </div>
             <p

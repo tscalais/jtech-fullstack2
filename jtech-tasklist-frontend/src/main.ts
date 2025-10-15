@@ -11,6 +11,15 @@ import './assets/styles/tailwind.css'
 // Importa a store de auth para inicialização
 import { useAuthStore } from './stores/auth'
 
+// Font Awesome
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { faUser, faLock, faHome, faClock, faArrowLeft, faFaceFrown, faUserPlus, faEye, faEyeSlash, faCheckCircle, faMagnifyingGlass, faBell, faChevronDown, faUserCircle, faCog, faArrowRightFromBracket, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons'
+
+library.add(
+  faUser, faLock, faHome, faClock, faArrowLeft, faFaceFrown, faUserPlus, faEye, faEyeSlash, faCheckCircle, faMagnifyingGlass, faBell, faChevronDown, faUserCircle, faCog, faArrowRightFromBracket, faExclamationTriangle
+)
+
 // ========== Criação da Aplicação ==========
 
 const app = createApp(App)
@@ -83,6 +92,10 @@ app.directive('click-outside', {
 // Exemplo: adicionar variáveis globais
 app.config.globalProperties.$appName = 'TaskList'
 app.config.globalProperties.$appVersion = '1.0.0'
+
+// ========== Registro Global de Componentes (opcional) ==========
+
+app.component('font-awesome-icon', FontAwesomeIcon)
 
 // ========== Montagem da Aplicação ==========
 

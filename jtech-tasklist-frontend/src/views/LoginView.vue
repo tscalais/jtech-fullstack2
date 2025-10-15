@@ -4,14 +4,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { resetPassword } from '@/lib/api'
 import type { AuthRequest } from '@/types'
-import {
-  ArrowLeftEndOnRectangleIcon,
-  UserIcon,
-  LockClosedIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  ExclamationTriangleIcon,
-} from '@heroicons/vue/24/outline'
 import { toast } from 'vue3-toastify'
 import { getRememberMe } from '@/utils/storage'
 
@@ -154,7 +146,7 @@ const goToForgotPassword = async () => {
         <div
           class="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-2xl mb-4 shadow-lg dark:bg-indigo-500"
         >
-          <ArrowLeftEndOnRectangleIcon class="w-10 h-10 text-white" />
+          <i class="fa-solid fa-arrow-left w-10 h-10 text-white" />
         </div>
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Bem-vindo ao TaskList</h1>
         <p class="text-gray-600 dark:text-gray-300">Entre com sua conta para continuar</p>
@@ -167,9 +159,7 @@ const goToForgotPassword = async () => {
           v-if="sessionExpired"
           class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-start space-x-3 dark:bg-yellow-900/20 dark:border-yellow-700"
         >
-          <ExclamationTriangleIcon
-            class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5 dark:text-yellow-400"
-          />
+          <i class="fa-solid fa-triangle-exclamation w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5 dark:text-yellow-400" />
           <p class="text-sm text-yellow-800 dark:text-yellow-200">
             Sua sessão expirou. Por favor, faça login novamente.
           </p>
@@ -187,7 +177,7 @@ const goToForgotPassword = async () => {
             </label>
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <UserIcon class="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                <i class="fa-solid fa-user w-5 h-5 text-gray-400 dark:text-gray-500" />
               </div>
               <input
                 id="userName"
@@ -212,7 +202,7 @@ const goToForgotPassword = async () => {
             </label>
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <LockClosedIcon class="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                <i class="fa-solid fa-lock w-5 h-5 text-gray-400 dark:text-gray-500" />
               </div>
               <input
                 id="password"
@@ -230,8 +220,8 @@ const goToForgotPassword = async () => {
                 class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                 :disabled="isLoading"
               >
-                <EyeIcon v-if="!showPassword" class="w-5 h-5" />
-                <EyeSlashIcon v-else class="w-5 h-5" />
+                <i v-if="!showPassword" class="fa-solid fa-eye-slash w-5 h-5" />
+                <i v-else class="fa-solid fa-eye w-5 h-5" />
               </button>
             </div>
           </div>

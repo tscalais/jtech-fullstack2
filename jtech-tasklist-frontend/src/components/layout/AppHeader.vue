@@ -2,14 +2,6 @@
 import { ref, computed } from 'vue'
 import FolderDropdown from '@/components/folder/FolderDropdown.vue'
 import type { FolderResponse } from '@/types/folder'
-import {
-  MagnifyingGlassIcon,
-  BellIcon,
-  ChevronDownIcon,
-  UserCircleIcon,
-  Cog6ToothIcon,
-  ArrowRightStartOnRectangleIcon,
-} from '@heroicons/vue/24/outline'
 
 const props = defineProps<{
   folders: FolderResponse[]
@@ -115,7 +107,8 @@ const handleSelectFolder = (folderId: string) => {
     <div class="hidden md:flex flex-grow max-w-lg mx-4">
       <div class="relative w-full">
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <MagnifyingGlassIcon class="w-5 h-5 text-gray-400" aria-hidden="true" />
+          <!-- Barra de pesquisa -->
+          <i class="fa-solid fa-magnifying-glass w-5 h-5 text-gray-400" aria-hidden="true" />
         </div>
         <input
           v-model="searchQuery"
@@ -134,7 +127,8 @@ const handleSelectFolder = (folderId: string) => {
         class="md:hidden text-gray-500 hover:text-primary-600 p-2 rounded-full transition duration-150"
         aria-label="Buscar"
       >
-        <MagnifyingGlassIcon class="w-6 h-6" aria-hidden="true" />
+        <!-- Botão busca mobile -->
+        <i class="fa-solid fa-magnifying-glass w-6 h-6" aria-hidden="true" />
       </button>
 
       <!-- Notificações -->
@@ -143,7 +137,8 @@ const handleSelectFolder = (folderId: string) => {
         aria-label="Notificações"
         @click="emit('show-notifications')"
       >
-        <BellIcon class="w-6 h-6" aria-hidden="true" />
+        <!-- Notificações -->
+        <i class="fa-solid fa-bell w-6 h-6" aria-hidden="true" />
 
         <!-- Badge de Notificação -->
         <span
@@ -171,9 +166,9 @@ const handleSelectFolder = (folderId: string) => {
           </span>
 
           <!-- Seta do Dropdown -->
-          <ChevronDownIcon
+          <i
             :class="[
-              'w-4 h-4 text-gray-400 transition-transform duration-200 hidden lg:block',
+              'fa-solid fa-chevron-down w-4 h-4 text-gray-400 transition-transform duration-200 hidden lg:block',
               isProfileMenuOpen && 'rotate-180',
             ]"
             aria-hidden="true"
@@ -205,14 +200,16 @@ const handleSelectFolder = (folderId: string) => {
                 class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-150 flex items-center space-x-2"
                 @click="emit('show-profile')"
               >
-                <UserCircleIcon class="w-4 h-4" aria-hidden="true" />
+                <!-- Meu Perfil -->
+                <i class="fa-solid fa-user-circle w-4 h-4" aria-hidden="true" />
                 <span>Meu Perfil</span>
               </button>
 
               <button
                 class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-150 flex items-center space-x-2"
               >
-                <Cog6ToothIcon class="w-4 h-4" aria-hidden="true" />
+                <!-- Configurações -->
+                <i class="fa-solid fa-cog w-4 h-4" aria-hidden="true" />
                 <span>Configurações</span>
               </button>
 
@@ -220,7 +217,8 @@ const handleSelectFolder = (folderId: string) => {
                 class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-150 flex items-center space-x-2 lg:hidden"
                 @click="emit('show-notifications')"
               >
-                <BellIcon class="w-4 h-4" aria-hidden="true" />
+                <!-- Notificações (menu) -->
+                <i class="fa-solid fa-bell w-4 h-4" aria-hidden="true" />
                 <span>Notificações</span>
                 <span
                   v-if="hasNotifications"
@@ -237,7 +235,8 @@ const handleSelectFolder = (folderId: string) => {
                 class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition duration-150 flex items-center space-x-2"
                 @click="emit('logout')"
               >
-                <ArrowRightStartOnRectangleIcon class="w-4 h-4" aria-hidden="true" />
+                <!-- Sair -->
+                <i class="fa-solid fa-arrow-right-from-bracket w-4 h-4" aria-hidden="true" />
                 <span>Sair</span>
               </button>
             </div>

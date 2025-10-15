@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { FaceFrownIcon, ArrowUturnLeftIcon, HomeIcon, ClockIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const countdown = ref(5)
@@ -53,11 +52,7 @@ const goToHome = () => {
         </div>
 
         <!-- Ícone flutuante -->
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <div class="animate-bounce">
-            <FaceFrownIcon class="w-24 h-24 md:w-32 md:h-32 text-primary-500" />
-          </div>
-        </div>
+        <i class="fa-solid fa-face-frown w-24 h-24 md:w-32 md:h-32 text-primary-500" />
       </div>
 
       <!-- Mensagens -->
@@ -74,7 +69,7 @@ const goToHome = () => {
           v-if="!isRedirecting"
           class="inline-flex items-center space-x-2 bg-primary-50 text-primary-700 px-4 py-2 rounded-full text-sm font-medium"
         >
-          <ClockIcon class="w-4 h-4" />
+          <i class="fa-solid fa-clock w-4 h-4" />
           <span>Redirecionando em {{ countdown }} segundo{{ countdown !== 1 ? 's' : '' }}...</span>
         </div>
 
@@ -94,7 +89,7 @@ const goToHome = () => {
           class="btn-primary flex items-center space-x-2 px-6 py-3"
           :disabled="isRedirecting"
         >
-          <HomeIcon class="w-5 h-5" />
+          <i class="fa-solid fa-home w-5 h-5" />
           <span>Ir para Home</span>
         </button>
 
@@ -103,7 +98,7 @@ const goToHome = () => {
           class="btn-secondary flex items-center space-x-2 px-6 py-3"
           :disabled="isRedirecting"
         >
-          <ArrowUturnLeftIcon class="w-5 h-5" />
+          <i class="fa-solid fa-arrow-left w-5 h-5" />
           <span>Voltar</span>
         </button>
       </div>
