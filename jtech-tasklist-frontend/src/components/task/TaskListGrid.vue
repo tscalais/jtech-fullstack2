@@ -7,8 +7,8 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  showDetails: [taskId: string]
-  toggleComplete: [taskId: string]
+  showDetails: [taskId: number]
+  toggleComplete: [taskId: number]
 }>()
 </script>
 

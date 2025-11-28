@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import type { Task } from '@/types/task'
+import type { Task, Subtask } from '@/types/task'
 import { useSubtasksStore } from '@/stores/subtasks'
 import { useTagsStore } from '@/stores/tags'
 
@@ -13,14 +13,16 @@ const props = defineProps<{
 const emit = defineEmits<{
   'close': []
   'update': [task: Task]
-  'delete': [taskId: string]
-  'complete': [taskId: string]
+  'delete': [taskId: number]
+  'complete': [taskId: number]
 }>()
 
 const newSubtaskText = ref('')
 const isEditingTitle = ref(false)
 const editedTitle = ref('')
 const showDeleteConfirm = ref(false)
+const showTagInput = ref(false)
+const newTagName = ref('')
 
 // Integração com stores
 const subtasksStore = useSubtasksStore()
@@ -39,7 +41,7 @@ const tags = computed(() => tagsStore.tags)
 const isTaskCompleted = computed(() => !!props.task?.completed)
 
 const completedSubtasks = computed(() =>
-  subtasks.value.filter((s: Subtask) => s.completed).length
+  subtasks.value.filter((s: Task) => s.completed).length
 )
 const totalSubtasks = computed(() => subtasks.value.length)
 const progressPercentage = computed(() => {
@@ -49,15 +51,17 @@ const progressPercentage = computed(() => {
 
 async function handleAddSubtask() {
   if (!props.task || !newSubtaskText.value.trim()) return
-  await subtasksStore.addSubtask(props.task.folder.id, props.task.id, { description: newSubtaskText.value })
+  await subtasksStore.addSubtask(props.task.folder.id, props.task.id, { title: newSubtaskText.value })
   newSubtaskText.value = ''
 }
 
 async function handleToggleSubtask(subtaskId: number) {
-  // Aqui você pode implementar a lógica de toggle na API, se necessário
+  if (!props.task) return
+  await subtasksStore.toggleSubtask(props.task.folder.id, subtaskId)
 }
 async function handleDeleteSubtask(subtaskId: number) {
-  // Aqui você pode implementar a lógica de deleção na API, se necessário
+  if (!props.task) return
+  await subtasksStore.deleteSubtask(props.task.folder.id, subtaskId)
 }
 
 async function handleAddTag(tagId: number) {
@@ -68,6 +72,35 @@ async function handleAddTag(tagId: number) {
 async function handleRemoveTag(tagId: number) {
   if (!props.task) return
   await tagsStore.dissociateTag(props.task.id, tagId)
+  emit('update', { ...props.task, tags: props.task.tags.filter(t => t.id !== tagId) })
+}
+
+async function handleCreateTag() {
+  if (!props.task || !newTagName.value.trim()) return
+  const tagName = newTagName.value.trim()
+  
+  try {
+    // Verifica se a tag já existe na pasta
+    let tag = tagsStore.tags.find(t => t.name.toLowerCase() === tagName.toLowerCase())
+    
+    if (!tag) {
+      // Cria nova tag
+      tag = await tagsStore.addTag(props.task.folder.id, { name: tagName })
+    }
+    
+    // Associa a tag à tarefa
+    await tagsStore.associateTag(props.task.id, tag.id)
+    
+    // Atualiza a tarefa localmente
+    const updatedTags = [...props.task.tags, tag]
+    emit('update', { ...props.task, tags: updatedTags })
+    
+    newTagName.value = ''
+    showTagInput.value = false
+  } catch (error) {
+    console.error('Erro ao criar/associar tag:', error)
+    alert('Erro ao adicionar tag. Verifique se o backend está rodando e se não há conflitos.')
+  }
 }
 
 // Watchers
@@ -151,14 +184,14 @@ watch(() => props.isOpen, (isOpen) => {
         >
           <div
             v-if="isOpen && task"
-            class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden"
+            class="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden"
             @click.stop
           >
 
             <!-- Header do Modal -->
-            <div class="flex-shrink-0 flex items-center justify-between border-b border-gray-200 px-6 py-4">
+            <div class="flex-shrink-0 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
               <div class="flex items-center space-x-3">
-                <h2 class="text-xl font-bold text-gray-900">Detalhes da Tarefa</h2>
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">Detalhes da Tarefa</h2>
 
                 <!-- Badge de Status -->
                 <span
@@ -170,7 +203,7 @@ watch(() => props.isOpen, (isOpen) => {
               </div>
 
               <button
-                class="text-gray-500 hover:text-gray-800 p-1 rounded-full hover:bg-gray-100 transition duration-150"
+                class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition duration-150"
                 aria-label="Fechar Detalhes"
                 @click="handleClose"
               >
@@ -188,8 +221,8 @@ watch(() => props.isOpen, (isOpen) => {
                 <!-- Título Editável -->
                 <div v-if="!isEditingTitle">
                   <h3
-                    class="text-3xl font-extrabold text-gray-800 cursor-pointer hover:text-primary-600 transition"
-                    :class="{ 'line-through text-gray-500': isTaskCompleted }"
+                    class="text-3xl font-extrabold text-gray-800 dark:text-white cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 transition"
+                    :class="{ 'line-through text-gray-500 dark:text-gray-500': isTaskCompleted }"
                     @click="isEditingTitle = true"
                   >
                     {{ task.title }}
@@ -199,7 +232,7 @@ watch(() => props.isOpen, (isOpen) => {
                   <input
                     v-model="editedTitle"
                     type="text"
-                    class="flex-1 text-2xl font-bold border-2 border-primary-500 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    class="flex-1 text-2xl font-bold border-2 border-primary-500 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     @keyup.enter="handleSaveTitle"
                     @keyup.esc="isEditingTitle = false"
                     autofocus
@@ -219,7 +252,7 @@ watch(() => props.isOpen, (isOpen) => {
                 </div>
 
                 <!-- Informação da Pasta -->
-                <p class="text-sm text-gray-500 flex items-center space-x-2">
+                <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center space-x-2">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                   </svg>
@@ -239,7 +272,7 @@ watch(() => props.isOpen, (isOpen) => {
                     <span>#{{ tag.name }}</span>
                     <button
                       class="opacity-0 group-hover:opacity-100 transition-opacity"
-                      @click="handleRemoveTag(tag.name)"
+                      @click="handleRemoveTag(tag.id)"
                     >
                       <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -248,8 +281,38 @@ watch(() => props.isOpen, (isOpen) => {
                   </span>
 
                   <!-- Botão Adicionar Tag -->
+                  <div v-if="showTagInput" class="flex items-center space-x-2">
+                    <input
+                      v-model="newTagName"
+                      type="text"
+                      class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500 w-24 text-gray-900 dark:text-white bg-white dark:bg-gray-700"
+                      placeholder="Nova tag"
+                      @keyup.enter="handleCreateTag"
+                      @keyup.esc="showTagInput = false"
+                      autofocus
+                    />
+                    <button
+                      type="button"
+                      class="text-green-600 hover:text-green-800 p-1 rounded hover:bg-green-50"
+                      @click.stop="handleCreateTag"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </button>
+                    <button
+                      class="text-red-600 hover:text-red-800"
+                      @click="showTagInput = false"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
                   <button
+                    v-else
                     class="text-sm font-semibold px-3 py-1 rounded-full border-2 border-dashed border-gray-300 text-gray-500 hover:border-primary-500 hover:text-primary-600 transition"
+                    @click="showTagInput = true"
                   >
                     + Tag
                   </button>
@@ -257,26 +320,26 @@ watch(() => props.isOpen, (isOpen) => {
               </div>
 
               <!-- Progresso -->
-              <div class="bg-gray-50 rounded-xl p-4">
+              <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
                 <div class="flex justify-between items-center mb-2">
-                  <span class="text-sm font-medium text-gray-700">Progresso</span>
-                  <span class="text-sm font-bold text-primary-600">{{ progressPercentage }}%</span>
+                  <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Progresso</span>
+                  <span class="text-sm font-bold text-primary-600 dark:text-primary-400">{{ progressPercentage }}%</span>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
                   <div
                     class="bg-gradient-to-r from-primary-500 to-primary-600 h-3 rounded-full transition-all duration-500 ease-out"
                     :style="{ width: `${progressPercentage}%` }"
                   ></div>
                 </div>
-                <p class="text-xs text-gray-500 mt-2">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   {{ completedSubtasks }} de 5 microtarefas concluídas
                 </p>
               </div>
 
               <!-- Microtarefas -->
               <div>
-                <h4 class="text-xl font-semibold text-gray-700 mb-3 flex items-center space-x-2">
-                  <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h4 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-3 flex items-center space-x-2">
+                  <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                   </svg>
                   <span>Microtarefas ({{ completedSubtasks }}/5)</span>
@@ -288,7 +351,7 @@ watch(() => props.isOpen, (isOpen) => {
                     v-model="newSubtaskText"
                     type="text"
                     placeholder="Adicionar nova microtarefa..."
-                    class="flex-grow p-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition"
+                    class="flex-grow p-3 border border-gray-300 dark:border-gray-600 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                     @keyup.enter="handleAddSubtask"
                   />
                   <button
@@ -313,7 +376,7 @@ watch(() => props.isOpen, (isOpen) => {
                     <div
                       v-for="subtask in subtasks"
                       :key="subtask.id"
-                      class="group flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:border-primary-300 hover:shadow-sm transition"
+                      class="group flex items-center space-x-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-500 hover:shadow-sm transition"
                     >
                       <input
                         type="checkbox"
@@ -327,8 +390,8 @@ watch(() => props.isOpen, (isOpen) => {
 
                       <span
                         :class="[
-                          'flex-1 text-base text-gray-700 transition',
-                          subtask.completed && 'line-through text-gray-400'
+                          'flex-1 text-base text-gray-700 dark:text-gray-200 transition',
+                          subtask.completed && 'line-through text-gray-400 dark:text-gray-500'
                         ]"
                       >
                         {{ subtask.title }}
@@ -354,7 +417,8 @@ watch(() => props.isOpen, (isOpen) => {
                 </div>
               </div>
 
-              <!-- Membros -->
+              <!-- Membros (Removido temporariamente pois não há suporte no backend) -->
+              <!--
               <div>
                 <h4 class="text-xl font-semibold text-gray-700 mb-3 flex items-center space-x-2">
                   <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -362,47 +426,17 @@ watch(() => props.isOpen, (isOpen) => {
                   </svg>
                   <span>Membros da Pasta</span>
                 </h4>
-
                 <p class="text-sm text-gray-500 mb-3">
                   Todos os membros podem visualizar e manipular as tarefas.
                 </p>
-
                 <div class="flex items-center space-x-2 flex-wrap gap-2">
-                  <div
-                    v-for="member in members"
-                    :key="member.id"
-                    :class="[
-                      'relative w-10 h-10 rounded-full flex items-center justify-center font-medium text-sm',
-                      `bg-${member.color}-200 text-${member.color}-600`,
-                      member.isOwner && 'ring-2 ring-primary-500'
-                    ]"
-                    :title="`${member.name}${member.isOwner ? ' (Owner)' : ''}`"
-                  >
-                    {{ member.initials }}
-                    <span
-                      v-if="member.isOwner"
-                      class="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center"
-                      title="Proprietário"
-                    >
-                      <svg class="w-3 h-3 text-yellow-800" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    </span>
-                  </div>
-
-                  <button
-                    class="w-10 h-10 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-200 hover:border-primary-500 transition duration-150"
-                    title="Gerenciar Membros"
-                  >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                    </svg>
-                  </button>
+                   ...
                 </div>
               </div>
+              -->
 
               <!-- Seção de Timestamps (Data de Criação/Atualização) -->
-              <div class="bg-gray-50 rounded-xl p-4 text-sm text-gray-600 space-y-1">
+              <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 text-sm text-gray-600 dark:text-gray-400 space-y-1">
                 <div class="flex items-center space-x-2">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -420,13 +454,13 @@ watch(() => props.isOpen, (isOpen) => {
             </div>
 
             <!-- Footer Fixo (Ações) -->
-            <div class="flex-shrink-0 px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex-shrink-0 px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-3">
 
               <!-- Botões de Ação Esquerda -->
               <div class="flex space-x-2 w-full sm:w-auto">
                 <button
                   v-if="!showDeleteConfirm"
-                  class="flex-1 sm:flex-none flex items-center justify-center space-x-2 text-red-600 hover:text-white hover:bg-red-500 border border-red-300 px-4 py-2 rounded-xl transition duration-150 font-medium"
+                  class="flex-1 sm:flex-none flex items-center justify-center space-x-2 text-red-600 hover:text-white hover:bg-red-500 border border-red-300 dark:border-red-800 px-4 py-2 rounded-xl transition duration-150 font-medium"
                   @click="showDeleteConfirm = true"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -444,7 +478,7 @@ watch(() => props.isOpen, (isOpen) => {
                     Confirmar
                   </button>
                   <button
-                    class="flex-1 sm:flex-none bg-gray-200 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-300 transition duration-150 font-medium"
+                    class="flex-1 sm:flex-none bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition duration-150 font-medium"
                     @click="showDeleteConfirm = false"
                   >
                     Cancelar
@@ -455,7 +489,7 @@ watch(() => props.isOpen, (isOpen) => {
               <!-- Botões de Ação Direita -->
               <div class="flex space-x-2 w-full sm:w-auto">
                 <button
-                  class="flex-1 sm:flex-none flex items-center justify-center space-x-2 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-300 transition duration-150 font-medium"
+                  class="flex-1 sm:flex-none flex items-center justify-center space-x-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition duration-150 font-medium"
                   @click="handleClose"
                 >
                   <span>Fechar</span>

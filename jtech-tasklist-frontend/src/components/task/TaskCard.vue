@@ -34,12 +34,12 @@ const handleCheckboxClick = (e: Event) => {
 <template>
   <div
     :class="[
-      'bg-white rounded-xl shadow-sm p-4 border cursor-pointer hover:shadow-lg transition duration-200',
+      'bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border dark:border-gray-700 cursor-pointer hover:shadow-lg transition duration-200',
       borderColor,
     ]"
     @click="emit('click', String(task.id))"
   >
-    <p :class="['text-lg font-bold text-gray-800 mb-2', task.completed && 'line-through']">
+    <p :class="['text-lg font-bold text-gray-800 dark:text-white mb-2', task.completed && 'line-through']">
       {{ task.title }}
     </p>
 

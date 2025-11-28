@@ -10,7 +10,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  select: [folderId: string]
+  select: [folderId: number]
   toggle: []
   create: [folderName: string]
   join: [accessKey: string]
@@ -23,13 +23,10 @@ const selectedFolder = computed(() => props.folders.find((f) => f.id == props.cu
 
 // Handler para seleção de pasta
 const handleSelectFolder = (folderId: string | number) => {
-  emit('select', String(folderId))
+  emit('select', Number(folderId))
 }
 
-// Handler para criar nova pasta
-const handleCreateFolder = () => {
-  emit('create')
-}
+
 
 // Handler para entrar em pasta com chave
 const handleJoinFolder = () => {

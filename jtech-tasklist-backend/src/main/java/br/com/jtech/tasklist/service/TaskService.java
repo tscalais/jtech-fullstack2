@@ -44,6 +44,18 @@ public class TaskService {
                 throw new MaxSubtasksExceededException();
             }
         }
+
+        if (task.getTags() != null && !task.getTags().isEmpty()) {
+            List<br.com.jtech.tasklist.model.entities.TaskTagEntity> taskTags = new java.util.ArrayList<>();
+            for (br.com.jtech.tasklist.model.entities.TagEntity tag : task.getTags()) {
+                br.com.jtech.tasklist.model.entities.TaskTagEntity tt = new br.com.jtech.tasklist.model.entities.TaskTagEntity();
+                tt.setTask(task);
+                tt.setTag(tag);
+                taskTags.add(tt);
+            }
+            task.setTaskTags(taskTags);
+        }
+
         return taskRepository.save(task);
     }
 

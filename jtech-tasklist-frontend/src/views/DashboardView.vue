@@ -15,7 +15,8 @@ import { useTasksStore } from '@/stores/tasks'
 import { useAuthStore } from '@/stores/auth'
 
 // Types
-import type { Task, Tag } from '@/types/task'
+import type { Task } from '@/types/task'
+import type { Tag } from '@/types/tag'
 import { toast } from 'vue3-toastify'
 
 // Router & Stores
@@ -160,19 +161,15 @@ const handleJoinFolder = async (accessKey: string) => {
 }
 
 // Task Handlers
-const handleCreateTask = async (title: string) => {
+const handleCreateTask = async (title: string, tags: Tag[] = []) => {
   if (!title.trim() || typeof foldersStore.currentFolderId !== 'number') return
   isLoading.value = true
   try {
-    await tasksStore.createTask({
+    await tasksStore.createTask(foldersStore.currentFolderId, {
       title: title.trim(),
-      folder: { id: foldersStore.currentFolderId },
       completed: false,
-      subtasks: [],
-      tags: [],
-      favorite: false,
       description: '',
-      id: 0,
+      tags: tags,
     })
   } catch (error) {
     console.error('Erro ao criar tarefa:', error)
@@ -196,29 +193,32 @@ const handleCloseModal = () => {
   }, 300) // Aguarda animação de saída
 }
 
-const handleToggleComplete = async (taskId: string) => {
+const handleToggleComplete = async (taskId: number) => {
+  if (typeof foldersStore.currentFolderId !== 'number') return
   try {
-    await tasksStore.toggleTaskComplete(taskId)
+    await tasksStore.setTaskStatus(foldersStore.currentFolderId, taskId)
   } catch (error) {
     console.error('Erro ao alterar status da tarefa:', error)
   }
 }
 
 const handleUpdateTask = async (updatedTask: Task) => {
+  if (typeof foldersStore.currentFolderId !== 'number') return
   try {
-    await tasksStore.updateTask(updatedTask)
+    const updated = await tasksStore.updateTask(foldersStore.currentFolderId, updatedTask.id, updatedTask)
     // Atualiza a tarefa selecionada se ainda estiver aberta
     if (selectedTask.value?.id === updatedTask.id) {
-      selectedTask.value = updatedTask
+      selectedTask.value = updated
     }
   } catch (error) {
     console.error('Erro ao atualizar tarefa:', error)
   }
 }
 
-const handleDeleteTask = async (taskId: string) => {
+const handleDeleteTask = async (taskId: number) => {
+  if (typeof foldersStore.currentFolderId !== 'number') return
   try {
-    await tasksStore.deleteTask(taskId)
+    await tasksStore.deleteTask(foldersStore.currentFolderId, taskId)
     handleCloseModal()
     // Mostrar notificação de sucesso
   } catch (error) {
@@ -227,9 +227,10 @@ const handleDeleteTask = async (taskId: string) => {
   }
 }
 
-const handleCompleteTask = async (taskId: string) => {
+const handleCompleteTask = async (taskId: number) => {
+  if (typeof foldersStore.currentFolderId !== 'number') return
   try {
-    await tasksStore.toggleTaskComplete(taskId)
+    await tasksStore.setTaskStatus(foldersStore.currentFolderId, taskId)
     handleCloseModal()
     // Mostrar notificação de sucesso
   } catch (error) {
@@ -237,47 +238,7 @@ const handleCompleteTask = async (taskId: string) => {
   }
 }
 
-// Subtask Handlers
-const handleAddSubtask = async (taskId: string, text: string) => {
-  try {
-    await tasksStore.addSubtask(taskId, text)
-  } catch (error) {
-    console.error('Erro ao adicionar subtask:', error)
-  }
-}
-
-const handleToggleSubtask = async (taskId: string, subtaskId: number) => {
-  try {
-    await tasksStore.toggleSubtask(taskId, subtaskId)
-  } catch (error) {
-    console.error('Erro ao toggle subtask:', error)
-  }
-}
-
-const handleDeleteSubtask = async (taskId: string, subtaskId: number) => {
-  try {
-    await tasksStore.deleteSubtask(taskId, subtaskId)
-  } catch (error) {
-    console.error('Erro ao deletar subtask:', error)
-  }
-}
-
-// Tag Handlers
-const handleAddTag = async (taskId: string, tag: Tag) => {
-  try {
-    await tasksStore.addTag(taskId, tag)
-  } catch (error) {
-    console.error('Erro ao adicionar tag:', error)
-  }
-}
-
-const handleRemoveTag = async (taskId: string, tagName: string) => {
-  try {
-    await tasksStore.removeTag(taskId, tagName)
-  } catch (error) {
-    console.error('Erro ao remover tag:', error)
-  }
-}
+// Subtask & Tag Handlers removed as they are handled internally by TaskDetailsModal using stores
 
 const handleFilterByTag = (tagName: string) => {
   activeFilterTag.value = activeFilterTag.value === tagName ? null : tagName
@@ -308,11 +269,9 @@ const handleShowProfile = () => {
     <!-- Header -->
     <AppHeader
       :folders="foldersStore.folders"
-      :current-folder-id="
-        foldersStore.currentFolderId !== null ? String(foldersStore.currentFolderId) : ''
-      "
+      :current-folder-id="foldersStore.currentFolderId"
       :user-name="authStore.user?.userName"
-      :full-name="authStore.user?.fullName"
+      :full-name="authStore.user?.fullName || 'Usuário'"
       :user-initials="
         authStore.user
           ? authStore.user.fullName
@@ -339,10 +298,10 @@ const handleShowProfile = () => {
         <div class="mb-6">
           <div class="flex items-center justify-between mb-4">
             <div>
-              <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
+              <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">
                 {{ currentFolder?.name || 'Carregando...' }}
               </h1>
-              <p class="text-sm text-gray-500 mt-1">
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {{ taskStats.total }} tarefa{{ taskStats.total !== 1 ? 's' : '' }} ·
                 {{ taskStats.completed }} concluída{{ taskStats.completed !== 1 ? 's' : '' }}
                 <span v-if="taskStats.urgent > 0" class="text-yellow-600 font-medium">
@@ -354,7 +313,7 @@ const handleShowProfile = () => {
             <!-- Botão de Ordenação (Opcional) -->
             <div class="hidden md:flex items-center space-x-2">
               <button
-                class="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-primary-600 border border-gray-300 rounded-lg hover:border-primary-500 transition"
+                class="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 border border-gray-300 dark:border-gray-700 rounded-lg hover:border-primary-500 transition"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -402,10 +361,10 @@ const handleShowProfile = () => {
                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
               />
             </svg>
-            <h3 class="text-xl font-semibold text-gray-700 mb-2">
+            <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">
               {{ activeFilterTag ? 'Nenhuma tarefa encontrada' : 'Nenhuma tarefa ainda' }}
             </h3>
-            <p class="text-gray-500 mb-6">
+            <p class="text-gray-500 dark:text-gray-400 mb-6">
               {{
                 activeFilterTag
                   ? `Nenhuma tarefa com a tag "${activeFilterTag}"`
@@ -441,11 +400,6 @@ const handleShowProfile = () => {
       @update="handleUpdateTask"
       @delete="handleDeleteTask"
       @complete="handleCompleteTask"
-      @add-subtask="handleAddSubtask"
-      @toggle-subtask="handleToggleSubtask"
-      @delete-subtask="handleDeleteSubtask"
-      @add-tag="handleAddTag"
-      @remove-tag="handleRemoveTag"
     />
   </div>
 </template>

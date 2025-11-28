@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { listSubtasks, createSubtask } from '@/lib/api/tasks'
+import { listSubtasks, createSubtask, updateTaskStatus, deleteTask } from '@/lib/api/tasks'
 import type { TaskEntity } from '@/types/task'
 
 export const useSubtasksStore = defineStore('subtasks', () => {
@@ -37,5 +37,36 @@ export const useSubtasksStore = defineStore('subtasks', () => {
     }
   }
 
-  return { subtasks, isLoading, error, fetchSubtasks, addSubtask }
+  async function toggleSubtask(folderId: number, subtaskId: number): Promise<void> {
+    isLoading.value = true
+    error.value = null
+    try {
+      await updateTaskStatus(folderId, subtaskId)
+      const subtask = subtasks.value.find((s) => s.id === subtaskId)
+      if (subtask) {
+        subtask.completed = !subtask.completed
+      }
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao atualizar subtarefa'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function deleteSubtask(folderId: number, subtaskId: number): Promise<void> {
+    isLoading.value = true
+    error.value = null
+    try {
+      await deleteTask(folderId, subtaskId)
+      subtasks.value = subtasks.value.filter((s) => s.id !== subtaskId)
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao deletar subtarefa'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  return { subtasks, isLoading, error, fetchSubtasks, addSubtask, toggleSubtask, deleteSubtask }
 })

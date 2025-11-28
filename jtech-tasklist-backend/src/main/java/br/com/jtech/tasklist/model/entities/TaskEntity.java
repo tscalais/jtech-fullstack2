@@ -43,4 +43,17 @@ public class TaskEntity {
     @OneToMany(mappedBy = "parentTask", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<TaskEntity> subtasks;
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TaskTagEntity> taskTags;
+
+    @Transient
+    private List<TagEntity> tags;
+
+    public List<TagEntity> getTags() {
+        if (taskTags != null) {
+            return taskTags.stream().map(TaskTagEntity::getTag).collect(java.util.stream.Collectors.toList());
+        }
+        return tags;
+    }
 }

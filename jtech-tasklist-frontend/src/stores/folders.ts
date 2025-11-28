@@ -6,6 +6,7 @@ import {
   createFolder as apiCreateFolder,
   updateFolder as apiUpdateFolder,
   deleteFolder as apiDeleteFolder,
+  joinFolder as apiJoinFolder,
 } from '@/lib/api/folders'
 import type { FolderResponse, FolderRequest } from '@/types/folder'
 
@@ -161,6 +162,27 @@ export const useFoldersStore = defineStore('folders', () => {
   }
 
   /**
+   * Entra em uma pasta usando uma chave de acesso
+   */
+  async function joinFolderByKey(accessKey: string): Promise<FolderResponse> {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const folder = await apiJoinFolder(accessKey)
+      folders.value.push(folder)
+      currentFolderId.value = folder.id
+      return folder
+    } catch (err: any) {
+      error.value = err.message || 'Erro ao entrar na pasta'
+      console.error('Erro ao entrar na pasta:', err)
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
    * Define a pasta atual
    */
   async function setCurrentFolder(folderId: number): Promise<void> {
@@ -250,6 +272,7 @@ export const useFoldersStore = defineStore('folders', () => {
     createFolder,
     updateFolder,
     deleteFolder,
+    joinFolderByKey,
     setCurrentFolder,
     incrementTaskCount,
     decrementTaskCount,

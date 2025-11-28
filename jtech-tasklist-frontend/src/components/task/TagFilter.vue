@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useTagsStore } from '@/stores/tags'
+import { useFoldersStore } from '@/stores/folders'
+import type { TagEntity } from '@/types'
 
 interface TagFilterItem {
   name: string
@@ -14,12 +17,16 @@ const emit = defineEmits<{
   selectTag: [tagName: string]
 }>()
 
-const tags = ref<TagFilterItem[]>([
-  { name: 'Backend', color: 'primary' },
-  { name: 'Urgente', color: 'yellow' },
-  { name: 'Documentação', color: 'gray' },
-  { name: 'Frontend', color: 'indigo' },
-])
+const tagsStore = useTagsStore()
+const foldersStore = useFoldersStore()
+
+const tags = computed(() => tagsStore.tags)
+
+watch(() => foldersStore.currentFolderId, async (newId) => {
+  if (typeof newId === 'number') {
+    await tagsStore.fetchTags(newId)
+  }
+}, { immediate: true })
 
 const selectTag = (tagName: string) => {
   emit('selectTag', tagName)
@@ -35,8 +42,8 @@ const selectTag = (tagName: string) => {
       :key="tag.name"
       :class="[
         'text-xs font-semibold px-3 py-1 rounded-full transition duration-150',
-        `bg-${tag.color}-100 text-${tag.color}-600 hover:bg-${tag.color}-200`,
-        activeTag === tag.name && `ring-2 ring-${tag.color}-500 ring-offset-1 shadow-md`
+        `bg-gray-100 text-gray-600 hover:bg-gray-200`,
+        activeTag === tag.name && `ring-2 ring-primary-500 ring-offset-1 shadow-md`
       ]"
       @click="selectTag(tag.name)"
     >

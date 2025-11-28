@@ -25,3 +25,8 @@ export async function deleteFolder(id: number): Promise<void> {
   await api.delete(`/folders/${id}`)
 }
 
+export async function joinFolder(accessKey: string): Promise<FolderResponse> {
+  const { data } = await api.post('/folders/join', { accessKey })
+  return data
+}
+
