@@ -14,7 +14,7 @@ public class TaskDTO {
     private boolean completed;
     private boolean favorite;
     private FolderDTO folder;
-    private java.util.List<br.com.jtech.tasklist.model.entities.TagEntity> tags;
+    private java.util.List<TagDTO> tags;
 
     public static TaskDTO of(TaskEntity entity) {
         if (entity == null) return null;
@@ -25,7 +25,7 @@ public class TaskDTO {
                 .completed(entity.isCompleted())
                 .favorite(entity.isFavorite())
                 .folder(FolderDTO.of(entity.getFolder()))
-                .tags(entity.getTags())
+                .tags(entity.getTags() != null ? entity.getTags().stream().map(TagDTO::of).collect(java.util.stream.Collectors.toList()) : null)
                 .build();
     }
 
@@ -37,7 +37,7 @@ public class TaskDTO {
                 .completed(this.completed)
                 .favorite(this.favorite)
                 .folder(this.folder != null ? this.folder.toEntity() : null)
-                .tags(this.tags)
+                .tags(this.tags != null ? this.tags.stream().map(TagDTO::toEntity).collect(java.util.stream.Collectors.toList()) : null)
                 .build();
     }
 }
